@@ -29,7 +29,7 @@ pip install csvsmith
 For local development:
 
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/csvsmith.git
+git clone https://github.com/yeiichi/csvsmith.git
 cd csvsmith
 python -m venv .venv
 source .venv/bin/activate
