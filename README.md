@@ -4,31 +4,54 @@
 ![Python versions](https://img.shields.io/pypi/pyversions/csvsmith.svg)
 [![License](https://img.shields.io/pypi/l/csvsmith.svg)](https://pypi.org/project/csvsmith/)
 
-`csvsmith` is a small collection of CSV utilities.
+## Introduction
 
----
+`csvsmith` is a lightweight collection of CSV utilities designed for
+data integrity, deduplication, and organization. It provides a robust
+Python API for programmatic data cleaning and a convenient CLI for quick
+operations. Whether you need to organize thousands of files based on
+their structural signatures or pinpoint duplicate rows in a complex
+dataset, `csvsmith` ensures the process is predictable, transparent, and
+reversible.
 
-Current focus:
+## Table of Contents
 
-- Duplicate value counting (`count_duplicates_sorted`)
-- Row-level digest creation (`add_row_digest`)
-- Duplicate-row detection (`find_duplicate_rows`)
-- Deduplication with full duplicate report (`dedupe_with_report`)
-- Command-line interface (CLI) for quick operations
+-   [Installation](#installation)
 
----
+-   
+
+    [Python API Usage](#python-api-usage)
+
+    :   -   [Count duplicate values](#count-duplicate-values)
+        -   [Find duplicate rows in a
+            DataFrame](#find-duplicate-rows-in-a-dataframe)
+        -   [Deduplicate with report](#deduplicate-with-report)
+        -   [CSV File Classification](#csv-file-classification)
+
+-   
+
+    [CLI Usage](#cli-usage)
+
+    :   -   [Show duplicate rows](#show-duplicate-rows)
+        -   [Deduplicate and generate a duplicate
+            report](#deduplicate-and-generate-a-duplicate-report)
+        -   [Classify CSVs](#classify-csvs)
+
+-   [Philosophy](#philosophy)
+
+-   [License](#license)
 
 ## Installation
 
 From PyPI (future):
 
-```bash
+``` bash
 pip install csvsmith
 ```
 
 For local development:
 
-```bash
+``` bash
 git clone https://github.com/yeiichi/csvsmith.git
 cd csvsmith
 python -m venv .venv
@@ -36,13 +59,13 @@ source .venv/bin/activate
 pip install -e .[dev]
 ```
 
----
-
 ## Python API Usage
 
 ### Count duplicate values
 
-```python
+Works on any iterable of hashable items.
+
+``` python
 from csvsmith import count_duplicates_sorted
 
 items = ["a", "b", "a", "c", "a", "b"]
@@ -52,7 +75,7 @@ print(count_duplicates_sorted(items))
 
 ### Find duplicate rows in a DataFrame
 
-```python
+``` python
 import pandas as pd
 from csvsmith import find_duplicate_rows
 
@@ -63,7 +86,7 @@ print(dup_rows)
 
 ### Deduplicate with report
 
-```python
+``` python
 import pandas as pd
 from csvsmith import dedupe_with_report
 
@@ -78,85 +101,55 @@ report.to_csv("duplicate_report.csv", index=False)
 deduped_no_id, report_no_id = dedupe_with_report(df, exclude=["id"])
 ```
 
----
+### CSV File Classification
+
+Organize files into directories based on their headers.
+
+``` python
+from csvsmith.classify import CSVClassifier
+
+classifier = CSVClassifier(
+    source_dir="./raw_data",
+    dest_dir="./organized",
+    auto=True  # Automatically group files with identical headers
+)
+
+# Execute the classification
+classifier.run()
+
+# Or rollback a previous run using its manifest
+classifier.rollback("./organized/manifest_20260121_120000.json")
+```
 
 ## CLI Usage
 
-`csvsmith` includes a small command-line interface for duplicate detection
-and CSV deduplication.
+`csvsmith` includes a command-line interface for duplicate detection and
+file organization.
 
 ### Show duplicate rows
 
-```bash
+``` bash
 csvsmith row-duplicates input.csv
 ```
 
 Save only duplicate rows to a file:
 
-```bash
+``` bash
 csvsmith row-duplicates input.csv -o duplicates_only.csv
-```
-
-Use only a subset of columns to determine duplicates:
-
-```bash
-csvsmith row-duplicates input.csv --subset col1 col2 -o dup_rows_subset.csv
-```
-
-Exclude ID column(s) when looking for duplicates:
-
-```bash
-csvsmith row-duplicates input.csv --exclude id -o dup_rows_no_id.csv
 ```
 
 ### Deduplicate and generate a duplicate report
 
-```bash
-csvsmith dedupe input.csv   --deduped deduped.csv   --report duplicate_report.csv
+``` bash
+csvsmith dedupe input.csv --deduped deduped.csv --report duplicate_report.csv
 ```
-
-### Deduplicate using selected columns
-
-```bash
-csvsmith dedupe input.csv   --subset col1 col2   --deduped deduped_subset.csv   --report duplicate_report_subset.csv
-```
-
-### Remove *all* occurrences of duplicated rows
-
-```bash
-csvsmith dedupe input.csv   --subset col1   --keep False   --deduped deduped_no_dups.csv   --report duplicate_report_col1.csv
-```
-
-Exclude “id” from duplicate logic:
-
-```bash
-csvsmith dedupe input.csv   --exclude id   --deduped deduped_no_id.csv   --report duplicate_report_no_id.csv
-```
-
----
-
-## Philosophy (“csvsmith Manifesto”)
-
-1. CSVs deserve tools that are simple, predictable, and transparent.
-2. A row has meaning only when its identity is stable and hashable.
-3. Collisions are sin; determinism is virtue.
-4. Let no delimiter sow ambiguity among fields.
-5. **Love thy `\x1f`.**  
-   The unseen separator, the quiet guardian of clean hashes.  
-   Chosen not for aesthetics, but for truth.
-6. The pipeline should be silent unless something is wrong.
-7. Your data deserves respect — and your tools should help you give it.
-
-For more, see `MANIFESTO.md`.
-
----
-
-## Usage
 
 ### Classify CSVs
-Organize a mess of CSV files into structured folders based on their column headers.
 
-```bash
+Organize a mess of CSV files into structured folders based on their
+column headers.
+
+``` bash
 # Preview what would happen (Dry Run)
 csvsmith classify --src ./raw_data --dest ./organized --auto --dry-run
 
@@ -166,6 +159,20 @@ csvsmith classify --src ./raw_data --dest ./organized --config signatures.json
 # Undo a classification run
 csvsmith classify --rollback ./organized/manifest_20260121_120000.json
 ```
+
+## Philosophy
+
+1.  CSVs deserve tools that are simple, predictable, and transparent.
+2.  A row has meaning only when its identity is stable and hashable.
+3.  Collisions are sin; determinism is virtue.
+4.  Let no delimiter sow ambiguity among fields.
+5.  **Love thy \\x1f.** The unseen separator, the quiet guardian of
+    clean hashes.
+6.  The pipeline should be silent unless something is wrong.
+7.  Your data deserves respect --- and your tools should help you give
+    it.
+
+For more, see `MANIFESTO.md`.
 
 ## License
 
