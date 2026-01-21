@@ -43,7 +43,7 @@ reversible.
 
 ## Installation
 
-From PyPI (future):
+From PyPI:
 
 ``` bash
 pip install csvsmith
