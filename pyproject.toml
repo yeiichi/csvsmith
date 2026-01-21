@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "csvsmith"
-version = "0.1.1"
+version = "0.2.0"
 description = "Small CSV utilities: classification, duplicates, row digests, and CLI helpers."
 readme = "README.md"
 requires-python = ">=3.10"

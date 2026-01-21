@@ -2,11 +2,12 @@
 """
 csvsmith CLI
 
-Duplicate-related helpers on CSV files.
+Utilities for CSV deduplication and file organization.
 
 Subcommands:
   - row-duplicates: show only rows that are duplicated
   - dedupe: drop duplicates and write both deduped CSV and a report CSV
+  - classify: organize CSVs into folders based on header signatures
 """
 
 from __future__ import annotations
@@ -156,7 +157,7 @@ def cmd_classify(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="csvsmith",
-        description="Small CSV utilities (duplicates-focused, first iteration).",
+        description="Small CSV utilities for deduplication and organization.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 

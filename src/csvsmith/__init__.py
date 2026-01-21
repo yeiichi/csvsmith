@@ -7,6 +7,8 @@ Current submodules:
 - csvsmith.cli (CLI entrypoint)
 """
 
+__version__ = "0.2.0"
+
 from .duplicates import (
     count_duplicates_sorted,
     add_row_digest,
