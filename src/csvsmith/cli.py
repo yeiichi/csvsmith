@@ -13,12 +13,14 @@ from __future__ import annotations
 
 import argparse
 import sys
+import json
 from pathlib import Path
 from typing import Sequence, Optional, List
 
 import pandas as pd
 
 from .duplicates import find_duplicate_rows, dedupe_with_report
+from .classify import CSVClassifier
 
 
 def _parse_cols(cols: Optional[Sequence[str]]) -> Optional[List[str]]:
@@ -121,6 +123,36 @@ def cmd_dedupe(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_classify(args: argparse.Namespace) -> int:
+    if not args.rollback and not (args.src and args.dest):
+        print("Error: --src and --dest are required unless --rollback is used.", file=sys.stderr)
+        return 1
+
+    sigs = {}
+    if args.config:
+        try:
+            with open(args.config, 'r') as f:
+                sigs = json.load(f)
+        except Exception as e:
+            print(f"Error loading config: {e}", file=sys.stderr)
+            return 1
+
+    classifier = CSVClassifier(
+        source_dir=args.src or ".",
+        dest_dir=args.dest or ".",
+        signatures=sigs,
+        auto=args.auto,
+        dry_run=args.dry_run
+    )
+
+    if args.rollback:
+        classifier.rollback(args.rollback)
+    else:
+        classifier.run()
+
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="csvsmith",
@@ -194,6 +226,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to write the duplicate-report CSV.",
     )
     p_dedupe.set_defaults(func=cmd_dedupe)
+
+    # classify
+    p_classify = subparsers.add_parser(
+        "classify",
+        help="Organize CSVs into folders based on headers.",
+    )
+    p_classify.add_argument("--src", help="Source directory containing CSV files.")
+    p_classify.add_argument("--dest", help="Destination root directory.")
+    p_classify.add_argument("--config", help="Path to JSON file containing header signatures.")
+    p_classify.add_argument("--auto", action="store_true", help="Enable auto-clustering for unknown headers.")
+    p_classify.add_argument("--dry-run", action="store_true", help="Preview actions without moving files.")
+    p_classify.add_argument("--rollback", help="Path to a manifest.json file to undo a previous run.")
+    p_classify.set_defaults(func=cmd_classify)
 
     return parser
 

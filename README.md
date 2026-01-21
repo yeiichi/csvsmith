@@ -151,6 +151,22 @@ For more, see `MANIFESTO.md`.
 
 ---
 
+## Usage
+
+### Classify CSVs
+Organize a mess of CSV files into structured folders based on their column headers.
+
+```bash
+# Preview what would happen (Dry Run)
+csvsmith classify --src ./raw_data --dest ./organized --auto --dry-run
+
+# Run classification with a signature config
+csvsmith classify --src ./raw_data --dest ./organized --config signatures.json
+
+# Undo a classification run
+csvsmith classify --rollback ./organized/manifest_20260121_120000.json
+```
+
 ## License
 
 MIT License.

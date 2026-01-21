@@ -1,15 +1,16 @@
 import csv
 import json
 import shutil
-import argparse
 from datetime import datetime
 from pathlib import Path
+
 
 class CSVClassifier:
     """
     Classifies CSV files into folders based on header signatures.
     Supports predefined mapping, auto-discovery, dry-runs, and rollbacks.
     """
+
     def __init__(self, source_dir, dest_dir, signatures=None, auto=False, dry_run=False):
         self.source = Path(source_dir)
         self.dest = Path(dest_dir)
@@ -30,14 +31,14 @@ class CSVClassifier:
             with open(file_path, 'r', encoding='utf-8-sig', newline='') as f:
                 reader = csv.reader(f)
                 header = next(reader, None)
-                
+
                 if not header:
                     return None
-                
+
                 # Rule: If the first row is purely numeric, it is data, not a header.
                 if all(str(c).strip().replace('.', '', 1).isdigit() for c in header if c.strip()):
                     return None
-                
+
                 return [h.strip() for h in header if h.strip()]
         except (UnicodeDecodeError, csv.Error):
             return None
@@ -46,7 +47,7 @@ class CSVClassifier:
         """Executes move with duplicate protection and records in manifest."""
         target_dir = self.dest / category
         dest_file = target_dir / file_path.name
-        
+
         # Handle duplicate filenames in destination
         if dest_file.exists() and not self.dry_run:
             timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -72,7 +73,7 @@ class CSVClassifier:
             except Exception as e:
                 print(f"Failed to move {file_path.name}: {e}")
                 operation_log["status"] = "failed"
-        
+
         self.manifest["operations"].append(operation_log)
 
     def _save_manifest(self):
@@ -82,7 +83,7 @@ class CSVClassifier:
 
         ts = datetime.now().strftime('%Y%m%d_%H%M%S')
         manifest_path = self.dest / f"manifest_{ts}.json"
-        
+
         with open(manifest_path, 'w', encoding='utf-8') as f:
             json.dump(self.manifest, f, indent=4)
         print(f"\nManifest saved: {manifest_path}")
@@ -101,7 +102,7 @@ class CSVClassifier:
         for op in data.get("operations", []):
             if op["status"] != "success":
                 continue
-            
+
             current_loc = Path(op["moved_to"])
             original_loc = Path(op["original_path"])
 
@@ -132,44 +133,11 @@ class CSVClassifier:
                         target_sub = cat
                         match_found = True
                         break
-                
+
                 if not match_found and self.auto:
                     slug = "_".join(sorted(headers))[:50]
                     target_sub = f"cluster_{slug}"
 
             self._move_file(file, target_sub, headers)
-        
+
         self._save_manifest()
-
-def main():
-    parser = argparse.ArgumentParser(description="CSV Smith Classification Tool")
-    parser.add_argument("--src", help="Source directory of CSVs")
-    parser.add_argument("--dest", help="Destination root directory")
-    parser.add_argument("--config", help="Path to JSON signatures file")
-    parser.add_argument("--auto", action="store_true", help="Enable auto-clustering")
-    parser.add_argument("--dry-run", action="store_true", help="Preview moves without acting")
-    parser.add_argument("--rollback", help="Path to a manifest.json file to undo a move")
-    
-    args = parser.parse_args()
-
-    if not args.rollback and not (args.src and args.dest):
-        parser.error("--src and --dest are required unless --rollback is used.")
-    
-    sigs = {}
-    if args.config:
-        try:
-            with open(args.config, 'r') as f:
-                sigs = json.load(f)
-        except Exception as e:
-            print(f"Error loading config: {e}")
-            return
-            
-    classifier = CSVClassifier(args.src, args.dest, sigs, args.auto, args.dry_run)
-    
-    if args.rollback:
-        classifier.rollback(args.rollback)
-    else:
-        classifier.run()
-
-if __name__ == '__main__':
-    main()
