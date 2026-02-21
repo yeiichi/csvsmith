@@ -1,13 +1,20 @@
 """
 csvsmith: small, focused CSV utilities.
 
-Current submodules:
+Public API:
+- count_duplicates_sorted
+- add_row_digest
+- find_duplicate_rows
+- dedupe_with_report
+- CSVClassifier
+
+Submodules:
 - csvsmith.duplicates
 - csvsmith.classify
 - csvsmith.cli (CLI entrypoint)
 """
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 from .duplicates import (
     count_duplicates_sorted,
