@@ -132,7 +132,7 @@ def cmd_classify(args: argparse.Namespace) -> int:
     sigs = {}
     if args.config:
         try:
-            with open(args.config, 'r') as f:
+            with open(args.config, "r", encoding="utf-8") as f:
                 sigs = json.load(f)
         except Exception as e:
             print(f"Error loading config: {e}", file=sys.stderr)
@@ -143,7 +143,10 @@ def cmd_classify(args: argparse.Namespace) -> int:
         dest_dir=args.dest or ".",
         signatures=sigs,
         auto=args.auto,
-        dry_run=args.dry_run
+        dry_run=args.dry_run,
+        report_only=args.report_only,
+        mode=args.mode,
+        match=args.match,
     )
 
     if args.rollback:
@@ -238,6 +241,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_classify.add_argument("--config", help="Path to JSON file containing header signatures.")
     p_classify.add_argument("--auto", action="store_true", help="Enable auto-clustering for unknown headers.")
     p_classify.add_argument("--dry-run", action="store_true", help="Preview actions without moving files.")
+    p_classify.add_argument("--report-only", action="store_true", help="Scan and write a manifest plan without moving files.")
+    p_classify.add_argument(
+        "--mode",
+        choices=["strict", "relaxed"],
+        default="strict",
+        help="Header comparison mode. strict = order matters; relaxed = order-insensitive.",
+    )
+    p_classify.add_argument(
+        "--match",
+        choices=["exact", "contains"],
+        default="exact",
+        help="Match rule. exact = headers must match signature; contains = signature columns must be present.",
+    )
     p_classify.add_argument("--rollback", help="Path to a manifest.json file to undo a previous run.")
     p_classify.set_defaults(func=cmd_classify)
 

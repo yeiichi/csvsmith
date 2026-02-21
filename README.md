@@ -9,49 +9,33 @@
 `csvsmith` is a lightweight collection of CSV utilities designed for
 data integrity, deduplication, and organization. It provides a robust
 Python API for programmatic data cleaning and a convenient CLI for quick
-operations. Whether you need to organize thousands of files based on
-their structural signatures or pinpoint duplicate rows in a complex
-dataset, `csvsmith` ensures the process is predictable, transparent, and
-reversible.
+operations.
 
-## Table of Contents
+Whether you need to organize thousands of files based on their structural
+signatures or pinpoint duplicate rows in a complex dataset, `csvsmith`
+ensures the process is predictable, transparent, and reversible.
 
--   [Installation](#installation)
+As of recent versions, CSV classification supports:
 
--   
+- strict vs relaxed header matching
+- exact vs subset (“contains”) matching
+- auto clustering with collision‑resistant hashes
+- dry‑run preview
+- report‑only planning mode (scan without moving)
+- full rollback via manifest
 
-    [Python API Usage](#python-api-usage)
-
-    :   -   [Count duplicate values](#count-duplicate-values)
-        -   [Find duplicate rows in a
-            DataFrame](#find-duplicate-rows-in-a-dataframe)
-        -   [Deduplicate with report](#deduplicate-with-report)
-        -   [CSV File Classification](#csv-file-classification)
-
--   
-
-    [CLI Usage](#cli-usage)
-
-    :   -   [Show duplicate rows](#show-duplicate-rows)
-        -   [Deduplicate and generate a duplicate
-            report](#deduplicate-and-generate-a-duplicate-report)
-        -   [Classify CSVs](#classify-csvs)
-
--   [Philosophy](#philosophy)
-
--   [License](#license)
 
 ## Installation
 
 From PyPI:
 
-``` bash
+```bash
 pip install csvsmith
 ```
 
 For local development:
 
-``` bash
+```bash
 git clone https://github.com/yeiichi/csvsmith.git
 cd csvsmith
 python -m venv .venv
@@ -59,13 +43,12 @@ source .venv/bin/activate
 pip install -e .[dev]
 ```
 
+
 ## Python API Usage
 
 ### Count duplicate values
 
-Works on any iterable of hashable items.
-
-``` python
+```python
 from csvsmith import count_duplicates_sorted
 
 items = ["a", "b", "a", "c", "a", "b"]
@@ -73,106 +56,120 @@ print(count_duplicates_sorted(items))
 # [('a', 3), ('b', 2)]
 ```
 
+
 ### Find duplicate rows in a DataFrame
 
-``` python
+```python
 import pandas as pd
 from csvsmith import find_duplicate_rows
 
 df = pd.read_csv("input.csv")
 dup_rows = find_duplicate_rows(df)
-print(dup_rows)
 ```
+
 
 ### Deduplicate with report
 
-``` python
+```python
 import pandas as pd
 from csvsmith import dedupe_with_report
 
 df = pd.read_csv("input.csv")
 
-# Use all columns
 deduped, report = dedupe_with_report(df)
 deduped.to_csv("deduped.csv", index=False)
 report.to_csv("duplicate_report.csv", index=False)
 
-# Use all columns except an ID column
-deduped_no_id, report_no_id = dedupe_with_report(df, exclude=["id"])
+# Exclude columns (e.g. IDs or timestamps)
+deduped2, report2 = dedupe_with_report(df, exclude=["id"])
 ```
 
-### CSV File Classification
 
-Organize files into directories based on their headers.
+### CSV File Classification (Python)
 
-``` python
+```python
 from csvsmith.classify import CSVClassifier
 
 classifier = CSVClassifier(
     source_dir="./raw_data",
     dest_dir="./organized",
-    auto=True  # Automatically group files with identical headers
+    auto=True,
+    mode="relaxed",        # or "strict"
+    match="exact",        # or "contains"
 )
 
-# Execute the classification
 classifier.run()
 
-# Or rollback a previous run using its manifest
-classifier.rollback("./organized/manifest_20260121_120000.json")
+# Roll back using the generated manifest
+classifier.rollback("./organized/manifest_YYYYMMDD_HHMMSS.json")
 ```
+
 
 ## CLI Usage
 
-`csvsmith` includes a command-line interface for duplicate detection and
-file organization.
+csvsmith provides a CLI for duplicate detection and CSV organization.
+
 
 ### Show duplicate rows
 
-``` bash
+```bash
 csvsmith row-duplicates input.csv
 ```
 
-Save only duplicate rows to a file:
+Save duplicate rows only:
 
-``` bash
+```bash
 csvsmith row-duplicates input.csv -o duplicates_only.csv
 ```
 
-### Deduplicate and generate a duplicate report
 
-``` bash
+### Deduplicate and generate a report
+
+```bash
 csvsmith dedupe input.csv --deduped deduped.csv --report duplicate_report.csv
 ```
 
+
 ### Classify CSVs
 
-Organize a mess of CSV files into structured folders based on their
-column headers.
+```bash
+# Dry-run (preview only)
+csvsmith classify --src ./raw --dest ./out --auto --dry-run
 
-``` bash
-# Preview what would happen (Dry Run)
-csvsmith classify --src ./raw_data --dest ./organized --auto --dry-run
+# Exact matching (default)
+csvsmith classify --src ./raw --dest ./out --config signatures.json
 
-# Run classification with a signature config
-csvsmith classify --src ./raw_data --dest ./organized --config signatures.json
+# Relaxed matching (ignore column order)
+csvsmith classify --src ./raw --dest ./out --config signatures.json --mode relaxed
 
-# Undo a classification run
-csvsmith classify --rollback ./organized/manifest_20260121_120000.json
+# Subset matching (signature columns must be present)
+csvsmith classify --src ./raw --dest ./out --config signatures.json --match contains
+
+# Report-only (plan without moving files)
+csvsmith classify --src ./raw --dest ./out --auto --report-only
+
+# Roll back using manifest
+csvsmith classify --rollback ./out/manifest_YYYYMMDD_HHMMSS.json
 ```
+
+
+### Report-only mode
+
+`--report-only` scans all CSVs and writes a manifest describing what *would*
+happen, without touching the filesystem. This enables downstream pipelines
+to consume the classification plan for custom processing.
+
 
 ## Philosophy
 
-1.  CSVs deserve tools that are simple, predictable, and transparent.
-2.  A row has meaning only when its identity is stable and hashable.
-3.  Collisions are sin; determinism is virtue.
-4.  Let no delimiter sow ambiguity among fields.
-5.  **Love thy \\x1f.** The unseen separator, the quiet guardian of
-    clean hashes.
-6.  The pipeline should be silent unless something is wrong.
-7.  Your data deserves respect --- and your tools should help you give
-    it.
+1. CSVs deserve tools that are simple, predictable, and transparent.
+2. A row has meaning only when its identity is stable and hashable.
+3. Collisions are sin; determinism is virtue.
+4. Let no delimiter sow ambiguity among fields.
+5. Love thy \x1f — the unseen separator, guardian of clean hashes.
+6. The pipeline should be silent unless something is wrong.
+7. Your data deserves respect — and your tools should help you give it.
 
-For more, see `MANIFESTO.md`.
 
 ## License
 
