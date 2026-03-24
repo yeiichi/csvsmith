@@ -1,159 +1,105 @@
-#!/usr/bin/env python3
-"""
-csvsmith CLI
-
-Utilities for CSV deduplication and file organization.
-
-Subcommands:
-  - row-duplicates: show only rows that are duplicated
-  - dedupe: drop duplicates and write both deduped CSV and a report CSV
-  - classify: organize CSVs into folders based on header signatures
-"""
-
-from __future__ import annotations
-
 import argparse
-import sys
 import json
+import sys
 from pathlib import Path
-from typing import Sequence, Optional, List
+from typing import Sequence, Optional
 
 import pandas as pd
 
-from .duplicates import find_duplicate_rows, dedupe_with_report
 from .classify import CSVClassifier
-
-
-def _parse_cols(cols: Optional[Sequence[str]]) -> Optional[List[str]]:
-    """
-    Normalize column list arguments from CLI.
-
-    We accept:
-      --subset col1 col2 col3
-      --exclude colA colB
-    or omit entirely.
-    """
-    if cols is None:
-        return None
-    if len(cols) == 0:
-        return None
-    return list(cols)
-
-
-def _effective_subset(
-    df: pd.DataFrame,
-    subset: Optional[Sequence[str]],
-    exclude: Optional[Sequence[str]],
-) -> Optional[List[str]]:
-    """
-    Compute the effective subset of columns to use for duplicate detection,
-    given a requested subset and/or exclude list.
-
-    Logic:
-      - if subset is None: start from all columns
-      - else: start from subset
-      - then remove any columns in exclude
-    """
-    if subset is None:
-        cols = list(df.columns)
-    else:
-        cols = list(subset)
-
-    if exclude:
-        exclude_set = set(exclude)
-        cols = [c for c in cols if c not in exclude_set]
-
-    if not cols:
-        return None
-
-    return cols
+from .duplicates import find_duplicate_rows, dedupe_with_report
+from .excel2csv import excel_to_csv
+from .filter_rows import DropRowsBySubstring
 
 
 def cmd_row_duplicates(args: argparse.Namespace) -> int:
-    input_path = Path(args.input)
-    if not input_path.is_file():
-        print(f"Error: input file not found: {input_path}", file=sys.stderr)
-        return 1
-
-    df = pd.read_csv(input_path)
-    subset = _parse_cols(args.subset)
-    exclude = _parse_cols(args.exclude)
-
-    eff_subset = _effective_subset(df, subset=subset, exclude=exclude)
-
-    dup_df = find_duplicate_rows(df, subset=eff_subset)
-
-    if args.output:
-        output_path = Path(args.output)
-        dup_df.to_csv(output_path, index=False)
+    df = pd.read_csv(args.input)
+    subset = args.subset.split(",") if args.subset else None
+    dupes = find_duplicate_rows(df, subset=subset)
+    if dupes.empty:
+        print("No duplicate rows found.")
     else:
-        dup_df.to_csv(sys.stdout, index=False)
-
+        print(f"Found {len(dupes)} duplicate rows:")
+        print(dupes.to_csv(index=False))
     return 0
 
 
 def cmd_dedupe(args: argparse.Namespace) -> int:
+    df = pd.read_csv(args.input)
+    subset = args.subset.split(",") if args.subset else None
+    exclude = args.exclude.split(",") if args.exclude else None
+
+    deduped_df, report = dedupe_with_report(
+        df, subset=subset, exclude=exclude, keep=args.keep
+    )
+
+    output_path = Path(args.output) if args.output else Path(args.input).with_suffix(".deduped.csv")
+    deduped_df.to_csv(output_path, index=False)
+    print(f"Wrote deduped CSV to: {output_path}")
+
+    if args.report:
+        report_path = Path(args.report)
+        with report_path.open("w", encoding="utf-8") as f:
+            json.dump(report, f, indent=2)
+        print(f"Wrote deduplication report to: {report_path}")
+
+    return 0
+
+
+def cmd_classify(args: argparse.Namespace) -> int:
+    classifier = CSVClassifier(
+        source_dir=args.source,
+        dest_dir=args.dest,
+        mode=args.mode,
+        match=args.match,
+        auto=args.auto,
+        dry_run=args.dry_run,
+    )
+    classifier.run()
+    return 0
+
+
+def cmd_excel_to_csv(args: argparse.Namespace) -> int:
     input_path = Path(args.input)
     if not input_path.is_file():
         print(f"Error: input file not found: {input_path}", file=sys.stderr)
         return 1
 
-    df = pd.read_csv(input_path)
-    subset = _parse_cols(args.subset)
-    exclude = _parse_cols(args.exclude)
+    try:
+        output_path = excel_to_csv(
+            input_path,
+            csv_path=args.output,
+            sheet_name=args.sheet_name,
+        )
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
 
-    deduped, report = dedupe_with_report(
-        df,
-        subset=subset,
-        exclude=exclude,
-        keep=args.keep,
-        digest_col=args.digest_col,
-    )
-
-    deduped_path = Path(args.deduped)
-    report_path = Path(args.report)
-
-    deduped_path.parent.mkdir(parents=True, exist_ok=True)
-    report_path.parent.mkdir(parents=True, exist_ok=True)
-
-    deduped.to_csv(deduped_path, index=False)
-    report.to_csv(report_path, index=False)
-
-    print(f"Wrote deduped CSV to: {deduped_path}")
-    print(f"Wrote duplicate report to: {report_path}")
+    print(f"Wrote CSV to: {output_path}")
     return 0
 
 
-def cmd_classify(args: argparse.Namespace) -> int:
-    if not args.rollback and not (args.src and args.dest):
-        print("Error: --src and --dest are required unless --rollback is used.", file=sys.stderr)
+def cmd_clean(args: argparse.Namespace) -> int:
+    input_path = Path(args.input)
+    if not input_path.is_file():
+        print(f"Error: input file not found: {input_path}", file=sys.stderr)
         return 1
 
-    sigs = {}
-    if args.config:
-        try:
-            with open(args.config, "r", encoding="utf-8") as f:
-                sigs = json.load(f)
-        except Exception as e:
-            print(f"Error loading config: {e}", file=sys.stderr)
-            return 1
+    try:
+        cleaner = DropRowsBySubstring(
+            input_path,
+            column_name=args.column_name,
+            unwanted_text=args.unwanted_text,
+            case_sensitive=not args.case_insensitive,
+            keep_header=not args.drop_header,
+        )
+        cleaner.write_filtered_rows()
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
 
-    classifier = CSVClassifier(
-        source_dir=args.src or ".",
-        dest_dir=args.dest or ".",
-        signatures=sigs,
-        auto=args.auto,
-        dry_run=args.dry_run,
-        report_only=args.report_only,
-        mode=args.mode,
-        match=args.match,
-    )
-
-    if args.rollback:
-        classifier.rollback(args.rollback)
-    else:
-        classifier.run()
-
+    output_path = input_path.with_suffix(DropRowsBySubstring.CLEAN_SUFFIX)
+    print(f"Wrote cleaned CSV to: {output_path}")
     return 0
 
 
@@ -165,97 +111,47 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # row-duplicates
-    p_row = subparsers.add_parser(
-        "row-duplicates",
-        help="Print only rows that have duplicates.",
-    )
-    p_row.add_argument("input", help="Input CSV file.")
-    p_row.add_argument(
-        "--subset",
-        nargs="*",
-        help="Column names to consider when detecting duplicates. "
-             "If omitted, all columns are used.",
-    )
-    p_row.add_argument(
-        "--exclude",
-        nargs="*",
-        help="Column names to exclude from duplicate detection. "
-             "Useful for ID columns, timestamps, etc.",
-    )
-    p_row.add_argument(
-        "-o",
-        "--output",
-        help="Output CSV file for duplicate rows. If omitted, writes to stdout.",
-    )
-    p_row.set_defaults(func=cmd_row_duplicates)
+    p_dupes = subparsers.add_parser("row-duplicates", help="Find duplicate rows in a CSV.")
+    p_dupes.add_argument("input", help="Input CSV file.")
+    p_dupes.add_argument("--subset", help="Comma-separated column names to consider.")
+    p_dupes.set_defaults(func=cmd_row_duplicates)
 
     # dedupe
-    p_dedupe = subparsers.add_parser(
-        "dedupe",
-        help="Drop duplicates and generate a duplicate-report CSV.",
-    )
+    p_dedupe = subparsers.add_parser("dedupe", help="Remove duplicate rows and save a report.")
     p_dedupe.add_argument("input", help="Input CSV file.")
-    p_dedupe.add_argument(
-        "--subset",
-        nargs="*",
-        help="Column names to consider when detecting duplicates. "
-             "If omitted, all columns are used.",
-    )
-    p_dedupe.add_argument(
-        "--exclude",
-        nargs="*",
-        help="Column names to exclude from duplicate detection. "
-             "Useful for ID columns, timestamps, etc.",
-    )
-    p_dedupe.add_argument(
-        "--keep",
-        choices=["first", "last", "False"],
-        default="first",
-        help='Which duplicate to keep (same as pandas.drop_duplicates). '
-             '"False" = drop all occurrences. Default: "first".',
-    )
-    p_dedupe.add_argument(
-        "--digest-col",
-        default="row_digest",
-        help='Name of digest column used in the report. Default: "row_digest".',
-    )
-    p_dedupe.add_argument(
-        "--deduped",
-        required=True,
-        help="Path to write the deduplicated CSV.",
-    )
-    p_dedupe.add_argument(
-        "--report",
-        required=True,
-        help="Path to write the duplicate-report CSV.",
-    )
+    p_dedupe.add_argument("-o", "--output", help="Output CSV file.")
+    p_dedupe.add_argument("--subset", help="Comma-separated column names to consider.")
+    p_dedupe.add_argument("--exclude", help="Comma-separated column names to exclude.")
+    p_dedupe.add_argument("--keep", choices=["first", "last", "False"], default="first",
+                          help="Which duplicate to keep.")
+    p_dedupe.add_argument("--report", help="Path to save the deduplication report (JSON).")
     p_dedupe.set_defaults(func=cmd_dedupe)
 
     # classify
-    p_classify = subparsers.add_parser(
-        "classify",
-        help="Organize CSVs into folders based on headers.",
-    )
-    p_classify.add_argument("--src", help="Source directory containing CSV files.")
-    p_classify.add_argument("--dest", help="Destination root directory.")
-    p_classify.add_argument("--config", help="Path to JSON file containing header signatures.")
-    p_classify.add_argument("--auto", action="store_true", help="Enable auto-clustering for unknown headers.")
-    p_classify.add_argument("--dry-run", action="store_true", help="Preview actions without moving files.")
-    p_classify.add_argument("--report-only", action="store_true", help="Scan and write a manifest plan without moving files.")
-    p_classify.add_argument(
-        "--mode",
-        choices=["strict", "relaxed"],
-        default="strict",
-        help="Header comparison mode. strict = order matters; relaxed = order-insensitive.",
-    )
-    p_classify.add_argument(
-        "--match",
-        choices=["exact", "contains"],
-        default="exact",
-        help="Match rule. exact = headers must match signature; contains = signature columns must be present.",
-    )
-    p_classify.add_argument("--rollback", help="Path to a manifest.json file to undo a previous run.")
+    p_classify = subparsers.add_parser("classify", help="Categorize CSV files based on headers.")
+    p_classify.add_argument("source", help="Source directory containing CSV files.")
+    p_classify.add_argument("dest", help="Destination directory for categorized files.")
+    p_classify.add_argument("--mode", choices=["strict", "relaxed"], default="strict")
+    p_classify.add_argument("--match", choices=["exact", "subset"], default="exact")
+    p_classify.add_argument("--auto", action="store_true", help="Automatically create categories.")
+    p_classify.add_argument("--dry-run", action="store_true", help="Do not move files, only report.")
     p_classify.set_defaults(func=cmd_classify)
+
+    # excel-to-csv
+    p_excel = subparsers.add_parser("excel-to-csv", help="Convert an Excel worksheet to CSV.")
+    p_excel.add_argument("input", help="Input Excel file.")
+    p_excel.add_argument("-o", "--output", help="Output CSV file.")
+    p_excel.add_argument("--sheet-name", help="Worksheet name to convert.")
+    p_excel.set_defaults(func=cmd_excel_to_csv)
+
+    # clean
+    p_clean = subparsers.add_parser("clean", help="Remove rows whose selected column contains unwanted text.")
+    p_clean.add_argument("input", help="Input CSV file.")
+    p_clean.add_argument("column_name", help="Column name to inspect.")
+    p_clean.add_argument("unwanted_text", help="Substring that triggers row removal.")
+    p_clean.add_argument("--case-insensitive", action="store_true", help="Perform case-insensitive matching.")
+    p_clean.add_argument("--drop-header", action="store_true", help="Do not preserve the header row.")
+    p_clean.set_defaults(func=cmd_clean)
 
     return parser
 
@@ -263,15 +159,14 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-
-    try:
-        func = args.func
-    except AttributeError:
-        parser.print_help()
-        return 1
-
-    return func(args)
+    if hasattr(args, "func"):
+        # Convert "False" string to False boolean for dedupe keep argument if necessary
+        if args.command == "dedupe" and args.keep == "False":
+            args.keep = False
+        return args.func(args)
+    parser.print_help()
+    return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())

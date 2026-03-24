@@ -20,7 +20,7 @@ def test_data(tmp_path):
 
     # Note:
     # - Sales signature is exact match for sales_01.csv
-    # - Users signature is a *subset* match for users_01.csv (extra signup_date column)
+    # - Users signature is a *subset* match for users_01.csv (extra signup_date col)
     sigs = {"Sales": ["date", "item", "price"], "Users": ["user_id", "email"]}
 
     return {"raw": raw_dir, "dest": dest_dir, "sigs": sigs}
@@ -49,7 +49,7 @@ def test_classifier_run_contains_with_auto(test_data):
 
 
 def test_classifier_exact_relaxed_users_goes_to_unclassified(test_data):
-    # Default is match="exact" -> users_01.csv does NOT match Users signature (extra column).
+    # Default is match="exact" -> users_01.csv does NOT match Users signature (extra col).
     # With auto=False it should go to unclassified.
     classifier = CSVClassifier(
         test_data["raw"],

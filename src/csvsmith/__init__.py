@@ -7,14 +7,18 @@ Public API:
 - find_duplicate_rows
 - dedupe_with_report
 - CSVClassifier
+- CSVCleaner
+- excel_to_csv
 
 Submodules:
 - csvsmith.duplicates
 - csvsmith.classify
+- csvsmith.csv_cleaner
+- csvsmith.excel2csv
 - csvsmith.cli (CLI entrypoint)
 """
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 from .duplicates import (
     count_duplicates_sorted,
@@ -23,11 +27,6 @@ from .duplicates import (
     dedupe_with_report,
 )
 from .classify import CSVClassifier
+from .filter_rows import DropRowsBySubstring, CSVCleaner
 
-__all__ = [
-    "count_duplicates_sorted",
-    "add_row_digest",
-    "find_duplicate_rows",
-    "dedupe_with_report",
-    "CSVClassifier",
-]
+__all__ = ["DropRowsBySubstring", "CSVCleaner"]

@@ -18,8 +18,8 @@ class HeaderKey:
     """
     Hashable header signature.
 
-    mode="strict"  -> ordered tuple (column order matters)
-    mode="relaxed" -> sorted unique tuple (column order does NOT matter)
+    mode="strict"  -> ordered tuple (col order matters)
+    mode="relaxed" -> sorted unique tuple (col order does NOT matter)
     """
     mode: str
     cols: tuple[str, ...]
@@ -34,7 +34,7 @@ class CSVClassifier:
       - match: "exact"  | "contains"   (contains is your legacy behavior)
 
     signatures:
-      dict[str, list[str]]
+      dict[sub, list[sub]]
         - category -> expected columns
         - interpretation depends on match:
             exact:    expected columns must match the file header exactly

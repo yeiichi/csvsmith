@@ -28,7 +28,7 @@ def count_duplicates_sorted(
 
     Args:
         items:
-            Any iterable of hashable items (str, int, tuple, etc.)
+            Any iterable of hashable items (sub, int, tuple, etc.)
         threshold:
             Minimum count to include in output (default: 2).
         reverse:
@@ -58,20 +58,20 @@ def add_row_digest(
         df:
             Input DataFrame.
         subset:
-            Optional list/sequence of column labels to use for the digest.
+            Optional list/sequence of col labels to use for the digest.
             If None, all columns are used.
         exclude:
-            Optional list/sequence of column labels to exclude from the digest,
+            Optional list/sequence of col labels to exclude from the digest,
             after `subset` is applied. This is useful for excluding ID columns,
             timestamps, etc.
         colname:
-            Name of the digest column to add (default: "row_digest").
+            Name of the digest col to add (default: "row_digest").
         inplace:
             If True, modify the original DataFrame and return it.
             If False (default), return a copy.
 
     Returns:
-        DataFrame with an extra column containing hex digests.
+        DataFrame with an extra col containing hex digests.
 
     Notes:
         We use the ASCII "Unit Separator" (0x1F, "\\x1f") as the internal
@@ -155,7 +155,7 @@ def dedupe_with_report(
             Which duplicate to keep. Same semantics as pandas:
             "first", "last", or "False" (string). Default: "first".
         digest_col:
-            Name of the temporary digest column used for grouping in the
+            Name of the temporary digest col used for grouping in the
             report (default: "row_digest").
 
     Returns:
@@ -190,7 +190,7 @@ def dedupe_with_report(
     else:
         subset_for_dupes = None
 
-    # Work on a copy with a digest column, using the effective subset
+    # Work on a copy with a digest col, using the effective subset
     work = add_row_digest(
         df,
         subset=subset_for_dupes,
