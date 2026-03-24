@@ -13,14 +13,14 @@ csvsmith
 Introduction
 ------------
 
-``csvsmith`` is a lightweight collection of CSV utilities designed for
+csvsmith is a lightweight collection of CSV utilities designed for
 data integrity, deduplication, organization, and Excel-to-CSV conversion.
 It provides a robust Python API for programmatic data cleaning and a
 convenient CLI for quick operations.
 
 Whether you need to organize thousands of files based on their structural
 signatures, pinpoint duplicate rows in a complex dataset, or convert an
-Excel worksheet into CSV, ``csvsmith`` ensures the process is predictable,
+Excel worksheet into CSV, csvsmith ensures the process is predictable,
 transparent, and reversible.
 
 As of recent versions, CSV classification supports:
@@ -109,7 +109,7 @@ Clean a CSV by column name
 
    cleaner.write_filtered_rows()
 
-If you are upgrading from an older version, ``CSVCleaner`` is kept as a
+If you are upgrading from an older version, CSVCleaner is kept as a
 compatibility alias.
 
 Convert Excel to CSV
@@ -149,7 +149,7 @@ CSV File Classification (Python)
 CLI Usage
 ---------
 
-``csvsmith`` provides a CLI for duplicate detection, CSV organization,
+csvsmith provides a CLI for duplicate detection, CSV organization,
 Excel conversion, and cleaning.
 
 Show duplicate rows
@@ -218,24 +218,24 @@ Classify CSVs
 Clean CSV rows
 ~~~~~~~~~~~~~~
 
-Use ``clean`` to remove rows from a CSV file when a chosen column contains
+Use clean to remove rows from a CSV file when a chosen column contains
 an unwanted substring.
 
 The command expects three positional arguments:
 
-- ``input``: path to the source CSV file
-- ``column_name``: the header name of the column to inspect
-- ``unwanted_text``: the text that, if found in the chosen column, causes a row to be removed
+- input: path to the source CSV file
+- column_name: the header name of the column to inspect
+- unwanted_text: the text that, if found in the chosen column, causes a row to be removed
 
 It also supports two optional flags:
 
-- ``--case-insensitive``: match ``unwanted_text`` without regard to letter case
-- ``--drop-header``: do not copy the first row to the output file
+- --case-insensitive: match unwanted_text without regard to letter case
+- --drop-header: do not copy the first row to the output file
 
 The output is written next to the input file using the same name with
-``.clean.csv`` appended. For example:
+.clean.csv appended. For example:
 
-- ``orders.csv`` -> ``orders.clean.csv``
+- orders.csv -> orders.clean.csv
 
 Basic usage
 ^^^^^^^^^^^
@@ -244,7 +244,7 @@ Basic usage
 
    csvsmith clean input.csv notes spam
 
-This removes every row where the ``notes`` column contains ``spam``.
+This removes every row where the notes column contains spam.
 The header row is preserved by default.
 
 Case-insensitive matching
@@ -254,8 +254,8 @@ Case-insensitive matching
 
    csvsmith clean input.csv notes spam --case-insensitive
 
-This is useful when the data may contain values such as ``Spam``,
-``SPAM``, or ``sPaM``.
+This is useful when the data may contain values such as Spam,
+SPAM, or sPaM.
 
 Skip the header row
 ^^^^^^^^^^^^^^^^^^^
@@ -270,9 +270,9 @@ only.
 How to use it effectively
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- Make sure ``column_name`` exactly matches a header value in the CSV.
+- Make sure column_name exactly matches a header value in the CSV.
 - Choose a substring that is specific enough to avoid removing unrelated rows.
-- Use ``--case-insensitive`` when the source data is inconsistent in capitalization.
+- Use --case-insensitive when the source data is inconsistent in capitalization.
 - Keep the header unless you are intentionally producing a headerless file.
 - If the column name is missing, the command will fail with a clear error.
 
@@ -305,7 +305,7 @@ produces a cleaned file containing:
 Report-only mode
 ~~~~~~~~~~~~~~~~
 
-``--report-only`` scans all CSVs and writes a manifest describing what
+--report-only scans all CSVs and writes a manifest describing what
 would happen, without touching the filesystem. This enables downstream
 pipelines to consume the classification plan for custom processing.
 
@@ -316,7 +316,7 @@ Philosophy
 2. A row has meaning only when its identity is stable and hashable.
 3. Collisions are sin; determinism is virtue.
 4. Let no delimiter sow ambiguity among fields.
-5. Love thy ``\x1f`` — the unseen separator, guardian of clean hashes.
+5. Love thy \x1f — the unseen separator, guardian of clean hashes.
 6. The pipeline should be silent unless something is wrong.
 7. Your data deserves respect — and your tools should help you give it.
 
@@ -324,4 +324,3 @@ License
 -------
 
 MIT License.
-```
