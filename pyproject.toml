@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "csvsmith"
 version = "0.2.2"
-description = "Small CSV utilities: classification, duplicate handling, row filtering, and CLI helpers."
+description = "Small CSV utilities: row deduplication, classification, row filtering, and CLI helpers."
 readme = "README.rst"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
@@ -13,7 +13,7 @@ license = { file = "LICENSE" }
 authors = [
   { name = "Eiichi YAMAMOTO", email = "info@yeiichi.com" }
 ]
-keywords = ["csv", "pandas", "duplicates", "data-cleaning", "file-organization", "filtering"]
+keywords = ["csv", "pandas", "deduplication", "data-cleaning", "file-organization", "filtering"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",

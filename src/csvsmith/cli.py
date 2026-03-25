@@ -7,7 +7,7 @@ from typing import Sequence, Optional
 import pandas as pd
 
 from .classify import CSVClassifier
-from .duplicates import find_duplicate_rows, dedupe_with_report
+from .row_dedup import find_duplicate_rows, dedupe_with_report
 from .excel2csv import excel_to_csv
 from .filter_rows import DropRowsBySubstring
 

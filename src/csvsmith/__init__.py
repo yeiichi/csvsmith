@@ -11,7 +11,7 @@ Public API:
 - excel_to_csv
 
 Submodules:
-- csvsmith.duplicates
+- csvsmith.row_dedup
 - csvsmith.classify
 - csvsmith.csv_cleaner
 - csvsmith.excel2csv
@@ -20,7 +20,7 @@ Submodules:
 
 __version__ = "0.2.2"
 
-from .duplicates import (
+from .row_dedup import (
     count_duplicates_sorted,
     add_row_digest,
     find_duplicate_rows,
