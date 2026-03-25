@@ -18,7 +18,7 @@ def test_write_filtered_rows_keeps_header_and_filters_matching_rows(tmp_path: Pa
     cleaner = DropRowsBySubstring(csv_path, column_name="notes", unwanted_text="spam")
     cleaner.write_filtered_rows()
 
-    output_path = tmp_path / "input.clean.csv"
+    output_path = tmp_path / "input.filtered.csv"
     assert output_path.exists()
     assert output_path.read_text(encoding="utf-8") == (
         "id,name,notes\n"
@@ -109,7 +109,7 @@ def test_write_filtered_rows_raises_if_output_would_overwrite_input(
 
     cleaner = DropRowsBySubstring(csv_path, column_name="name", unwanted_text="x")
 
-    monkeypatch.setattr(cleaner, "CLEAN_SUFFIX", ".csv")
+    monkeypatch.setattr(cleaner, "FILTERED_SUFFIX", ".csv")
 
     with pytest.raises(ValueError, match="Output path would overwrite the input file"):
         cleaner.write_filtered_rows()

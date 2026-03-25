@@ -7,10 +7,10 @@ from typing import Generator
 
 class DropRowsBySubstring:
     """
-    Clean CSV rows by removing rows whose selected column contains a target substring.
+    Filter CSV rows by removing rows whose selected column contains a target substring.
     """
 
-    CLEAN_SUFFIX = ".clean.csv"
+    FILTERED_SUFFIX = ".filtered.csv"
 
     def __init__(
         self,
@@ -71,7 +71,7 @@ class DropRowsBySubstring:
         yield from self._iter_rows_to_write()
 
     def write_filtered_rows(self) -> None:
-        output_path = self.csv_path.with_suffix(self.CLEAN_SUFFIX)
+        output_path = self.csv_path.with_suffix(self.FILTERED_SUFFIX)
         if output_path == self.csv_path:
             raise ValueError("Output path would overwrite the input file")
 

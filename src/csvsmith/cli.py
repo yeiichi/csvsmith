@@ -2,14 +2,31 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Sequence, Optional
+from typing import Optional, Sequence
 
 import pandas as pd
 
+from . import __version__
 from .classify import CSVClassifier
-from .row_dedup import find_duplicate_rows, dedupe_with_report
 from .excel2csv import excel_to_csv
 from .filter_rows import DropRowsBySubstring
+from .move_files import move_by_suffix
+from .row_dedup import dedupe_with_report, find_duplicate_rows
+
+
+def _parse_suffixes(value: str | None) -> set[str]:
+    if not value:
+        return {".csv", ".pdf"}
+
+    suffixes: set[str] = set()
+    for item in value.split(","):
+        suffix = item.strip().lower()
+        if not suffix:
+            continue
+        if not suffix.startswith("."):
+            suffix = f".{suffix}"
+        suffixes.add(suffix)
+    return suffixes
 
 
 def cmd_row_duplicates(args: argparse.Namespace) -> int:
@@ -59,6 +76,13 @@ def cmd_classify(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_move_files(args: argparse.Namespace) -> int:
+    suffixes = _parse_suffixes(args.suffixes)
+    moved_count = move_by_suffix(args.source, args.dest, suffixes=suffixes)
+    print(f"Moved {moved_count} file(s).")
+    return 0
+
+
 def cmd_excel_to_csv(args: argparse.Namespace) -> int:
     input_path = Path(args.input)
     if not input_path.is_file():
@@ -79,7 +103,7 @@ def cmd_excel_to_csv(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_clean(args: argparse.Namespace) -> int:
+def cmd_drop_rows(args: argparse.Namespace) -> int:
     input_path = Path(args.input)
     if not input_path.is_file():
         print(f"Error: input file not found: {input_path}", file=sys.stderr)
@@ -98,60 +122,99 @@ def cmd_clean(args: argparse.Namespace) -> int:
         print(f"Error: {e}", file=sys.stderr)
         return 1
 
-    output_path = input_path.with_suffix(DropRowsBySubstring.CLEAN_SUFFIX)
-    print(f"Wrote cleaned CSV to: {output_path}")
+    output_path = input_path.with_suffix(DropRowsBySubstring.FILTERED_SUFFIX)
+    print(f"Wrote filtered CSV to: {output_path}")
     return 0
+
+
+def _add_row_duplicates_parser(subparsers) -> None:
+    parser = subparsers.add_parser("row-duplicates", help="Find duplicate rows in a CSV.")
+    parser.add_argument("input", help="Input CSV file.")
+    parser.add_argument("--subset", help="Comma-separated column names to consider.")
+    parser.set_defaults(func=cmd_row_duplicates)
+
+
+def _add_dedupe_parser(subparsers) -> None:
+    parser = subparsers.add_parser("dedupe", help="Remove duplicate rows and save a report.")
+    parser.add_argument("input", help="Input CSV file.")
+    parser.add_argument("-o", "--output", help="Output CSV file.")
+    parser.add_argument("--subset", help="Comma-separated column names to consider.")
+    parser.add_argument("--exclude", help="Comma-separated column names to exclude.")
+    parser.add_argument(
+        "--keep",
+        choices=["first", "last", "False"],
+        default="first",
+        help="Which duplicate to keep.",
+    )
+    parser.add_argument("--report", help="Path to save the deduplication report (JSON).")
+    parser.set_defaults(func=cmd_dedupe)
+
+
+def _add_classify_parser(subparsers) -> None:
+    parser = subparsers.add_parser("classify", help="Categorize CSV files based on headers.")
+    parser.add_argument("source", help="Source directory containing CSV files.")
+    parser.add_argument("dest", help="Destination directory for categorized files.")
+    parser.add_argument("--mode", choices=["strict", "relaxed"], default="strict")
+    parser.add_argument("--match", choices=["exact", "subset"], default="exact")
+    parser.add_argument("--auto", action="store_true", help="Automatically create categories.")
+    parser.add_argument("--dry-run", action="store_true", help="Do not move files, only report.")
+    parser.set_defaults(func=cmd_classify)
+
+
+def _add_move_files_parser(subparsers) -> None:
+    parser = subparsers.add_parser("move-files", help="Move files by suffix.")
+    parser.add_argument("source", help="Source directory containing files.")
+    parser.add_argument("dest", help="Destination directory for moved files.")
+    parser.add_argument(
+        "--suffixes",
+        help="Comma-separated suffixes to move (for example: csv,pdf or .csv,.pdf).",
+    )
+    parser.set_defaults(func=cmd_move_files)
+
+
+def _add_excel_to_csv_parser(subparsers) -> None:
+    parser = subparsers.add_parser("excel-to-csv", help="Convert an Excel worksheet to CSV.")
+    parser.add_argument("input", help="Input Excel file.")
+    parser.add_argument("-o", "--output", help="Output CSV file.")
+    parser.add_argument("--sheet-name", help="Worksheet name to convert.")
+    parser.set_defaults(func=cmd_excel_to_csv)
+
+
+def _add_drop_rows_parser(subparsers) -> None:
+    parser = subparsers.add_parser(
+        "drop-rows",
+        help="Remove rows whose selected column contains unwanted text.",
+    )
+    parser.add_argument("input", help="Input CSV file.")
+    parser.add_argument("column_name", help="Column name to inspect.")
+    parser.add_argument("unwanted_text", help="Substring that triggers row removal.")
+    parser.add_argument(
+        "--case-insensitive",
+        action="store_true",
+        help="Perform case-insensitive matching.",
+    )
+    parser.add_argument("--drop-header", action="store_true", help="Do not preserve the header row.")
+    parser.set_defaults(func=cmd_drop_rows)
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="csvsmith",
-        description="Small CSV utilities for deduplication and organization.",
+        description="Lightweight CSV utilities for data integrity, deduplication, and organization.",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    # row-duplicates
-    p_dupes = subparsers.add_parser("row-duplicates", help="Find duplicate rows in a CSV.")
-    p_dupes.add_argument("input", help="Input CSV file.")
-    p_dupes.add_argument("--subset", help="Comma-separated column names to consider.")
-    p_dupes.set_defaults(func=cmd_row_duplicates)
-
-    # dedupe
-    p_dedupe = subparsers.add_parser("dedupe", help="Remove duplicate rows and save a report.")
-    p_dedupe.add_argument("input", help="Input CSV file.")
-    p_dedupe.add_argument("-o", "--output", help="Output CSV file.")
-    p_dedupe.add_argument("--subset", help="Comma-separated column names to consider.")
-    p_dedupe.add_argument("--exclude", help="Comma-separated column names to exclude.")
-    p_dedupe.add_argument("--keep", choices=["first", "last", "False"], default="first",
-                          help="Which duplicate to keep.")
-    p_dedupe.add_argument("--report", help="Path to save the deduplication report (JSON).")
-    p_dedupe.set_defaults(func=cmd_dedupe)
-
-    # classify
-    p_classify = subparsers.add_parser("classify", help="Categorize CSV files based on headers.")
-    p_classify.add_argument("source", help="Source directory containing CSV files.")
-    p_classify.add_argument("dest", help="Destination directory for categorized files.")
-    p_classify.add_argument("--mode", choices=["strict", "relaxed"], default="strict")
-    p_classify.add_argument("--match", choices=["exact", "subset"], default="exact")
-    p_classify.add_argument("--auto", action="store_true", help="Automatically create categories.")
-    p_classify.add_argument("--dry-run", action="store_true", help="Do not move files, only report.")
-    p_classify.set_defaults(func=cmd_classify)
-
-    # excel-to-csv
-    p_excel = subparsers.add_parser("excel-to-csv", help="Convert an Excel worksheet to CSV.")
-    p_excel.add_argument("input", help="Input Excel file.")
-    p_excel.add_argument("-o", "--output", help="Output CSV file.")
-    p_excel.add_argument("--sheet-name", help="Worksheet name to convert.")
-    p_excel.set_defaults(func=cmd_excel_to_csv)
-
-    # clean
-    p_clean = subparsers.add_parser("clean", help="Remove rows whose selected column contains unwanted text.")
-    p_clean.add_argument("input", help="Input CSV file.")
-    p_clean.add_argument("column_name", help="Column name to inspect.")
-    p_clean.add_argument("unwanted_text", help="Substring that triggers row removal.")
-    p_clean.add_argument("--case-insensitive", action="store_true", help="Perform case-insensitive matching.")
-    p_clean.add_argument("--drop-header", action="store_true", help="Do not preserve the header row.")
-    p_clean.set_defaults(func=cmd_clean)
+    _add_row_duplicates_parser(subparsers)
+    _add_dedupe_parser(subparsers)
+    _add_classify_parser(subparsers)
+    _add_move_files_parser(subparsers)
+    _add_excel_to_csv_parser(subparsers)
+    _add_drop_rows_parser(subparsers)
 
     return parser
 
@@ -159,11 +222,10 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+
     if hasattr(args, "func"):
-        # Convert "False" string to False boolean for dedupe keep argument if necessary
-        if args.command == "dedupe" and args.keep == "False":
-            args.keep = False
         return args.func(args)
+
     parser.print_help()
     return 0
 

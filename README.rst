@@ -13,24 +13,28 @@ csvsmith
 Introduction
 ------------
 
-csvsmith is a lightweight collection of CSV utilities designed for
-data integrity, deduplication, organization, and Excel-to-CSV conversion.
-It provides a robust Python API for programmatic data cleaning and a
-convenient CLI for quick operations.
+csvsmith is a lightweight collection of CSV utilities designed for data
+integrity, deduplication, organization, and Excel-to-CSV conversion.
 
-Whether you need to organize thousands of files based on their structural
-signatures, pinpoint duplicate rows in a complex dataset, or convert an
-Excel worksheet into CSV, csvsmith ensures the process is predictable,
-transparent, and reversible.
+It provides a small Python API for programmatic data filtering and a single
+CLI entrypoint for quick operations.
 
-As of recent versions, CSV classification supports:
+Whether you need to organize CSV files by header signatures, find duplicate
+rows in a dataset, convert an Excel worksheet into CSV, or drop rows by a
+substring rule, csvsmith aims to keep the process predictable and reversible.
 
-- strict vs relaxed header matching
-- exact vs subset ("contains") matching
-- auto clustering with collision-resistant hashes
-- dry-run preview
-- report-only planning mode (scan without moving)
-- full rollback via manifest
+Features
+--------
+
+- row duplicate counting and reporting
+- DataFrame deduplication with reports
+- CSV classification by header signature
+- dry-run and report-only classification modes
+- rollback support via manifest
+- row filtering by substring
+- Excel worksheet to CSV conversion
+- file moving by suffix
+- a single command-line entrypoint with subcommands
 
 Installation
 ------------
@@ -66,7 +70,7 @@ Count duplicate values
    # [('a', 3), ('b', 2)]
 
 Find duplicate rows in a DataFrame
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -93,8 +97,8 @@ Deduplicate with report
    # Exclude columns (e.g. IDs or timestamps)
    deduped2, report2 = dedupe_with_report(df, exclude=["id"])
 
-Clean a CSV by column name
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Drop rows in a CSV by column name
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -109,8 +113,8 @@ Clean a CSV by column name
 
    cleaner.write_filtered_rows()
 
-If you are upgrading from an older version, CSVCleaner is kept as a
-compatibility alias.
+If you are upgrading from an older version, CSVCleaner is still available as a
+compatibility alias, but DropRowsBySubstring is the preferred name.
 
 Convert Excel to CSV
 ~~~~~~~~~~~~~~~~~~~~
@@ -126,8 +130,23 @@ Convert Excel to CSV
 
    print(csv_path)
 
+Move files by suffix
+~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   from csvsmith import move_by_suffix
+
+   moved_count = move_by_suffix(
+       src_dir="./raw",
+       dst_dir="./processed",
+       suffixes=[".csv", ".pdf"],
+   )
+
+   print(f"Moved {moved_count} files.")
+
 CSV File Classification (Python)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -149,8 +168,8 @@ CSV File Classification (Python)
 CLI Usage
 ---------
 
-csvsmith provides a CLI for duplicate detection, CSV organization,
-Excel conversion, and cleaning.
+csvsmith provides a single CLI entrypoint with subcommands for duplicate
+detection, CSV organization, Excel conversion, file moving, and row filtering.
 
 Show duplicate rows
 ~~~~~~~~~~~~~~~~~~~
@@ -206,7 +225,7 @@ Classify CSVs
    csvsmith classify ./raw ./out --mode relaxed
 
    # Subset matching (signature columns must be present)
-   csvsmith classify ./raw ./out --match subset
+   csvsmith classify ./raw ./out --match contains
 
    # Report-only (plan without moving files)
    csvsmith classify ./raw ./out --auto --report-only
@@ -215,11 +234,21 @@ Classify CSVs
    # Use the Python API for rollback:
    # classifier.rollback("./out/manifest_YYYYMMDD_HHMMSS.json")
 
-Clean CSV rows
-~~~~~~~~~~~~~~
+Move files by suffix
+~~~~~~~~~~~~~~~~~~~~
 
-Use clean to remove rows from a CSV file when a chosen column contains
-an unwanted substring.
+.. code-block:: bash
+
+   csvsmith move-files src_dir dst_dir --suffixes csv,pdf
+
+This moves files whose suffix matches one of the given values. The suffixes can
+be written with or without a leading dot, and matching is case-insensitive.
+
+Drop CSV rows
+~~~~~~~~~~~~~
+
+Use the ``drop-rows`` subcommand to remove rows from a CSV file when a chosen
+column contains an unwanted substring.
 
 The command expects three positional arguments:
 
@@ -233,39 +262,37 @@ It also supports two optional flags:
 - --drop-header: do not copy the first row to the output file
 
 The output is written next to the input file using the same name with
-.clean.csv appended. For example:
+``.filtered.csv`` appended. For example:
 
-- orders.csv -> orders.clean.csv
+- orders.csv -> orders.filtered.csv
 
 Basic usage
 ^^^^^^^^^^^
 
 .. code-block:: bash
 
-   csvsmith clean input.csv notes spam
+   csvsmith drop-rows input.csv notes spam
 
-This removes every row where the notes column contains spam.
-The header row is preserved by default.
+This removes every row where the notes column contains spam. The header row is
+preserved by default.
 
 Case-insensitive matching
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
-   csvsmith clean input.csv notes spam --case-insensitive
+   csvsmith drop-rows input.csv notes spam --case-insensitive
 
-This is useful when the data may contain values such as Spam,
-SPAM, or sPaM.
+This is useful when the data may contain values such as Spam, SPAM, or sPaM.
 
 Skip the header row
 ^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
-   csvsmith clean input.csv notes spam --drop-header
+   csvsmith drop-rows input.csv notes spam --drop-header
 
-Use this only if you explicitly want the output file to contain data rows
-only.
+Use this only if you explicitly want the output file to contain data rows only.
 
 How to use it effectively
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -292,9 +319,9 @@ Running:
 
 .. code-block:: bash
 
-   csvsmith clean input.csv notes spam
+   csvsmith drop-rows input.csv notes spam
 
-produces a cleaned file containing:
+produces a filtered file containing:
 
 .. code-block:: csv
 
@@ -305,7 +332,7 @@ produces a cleaned file containing:
 Report-only mode
 ~~~~~~~~~~~~~~~~
 
---report-only scans all CSVs and writes a manifest describing what
+``--report-only`` scans matching CSVs and writes a manifest describing what
 would happen, without touching the filesystem. This enables downstream
 pipelines to consume the classification plan for custom processing.
 
