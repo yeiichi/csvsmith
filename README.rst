@@ -8,20 +8,22 @@ csvsmith
    :target: https://pypi.org/project/csvsmith/
 
 .. image:: https://img.shields.io/pypi/l/csvsmith.svg
-   :target: https://pypi.org/project/csvsmith/
+   :target: https://pypi.org/project/ccsvsmith/
 
 Introduction
 ------------
 
 csvsmith is a lightweight collection of CSV utilities designed for data
-integrity, deduplication, organization, and Excel-to-CSV conversion.
+integrity, deduplication, organization, Excel-to-CSV conversion, and
+string-similarity analysis.
 
 It provides a small Python API for programmatic data filtering and a single
 CLI entrypoint for quick operations.
 
 Whether you need to organize CSV files by header signatures, find duplicate
-rows in a dataset, convert an Excel worksheet into CSV, or drop rows by a
-substring rule, csvsmith aims to keep the process predictable and reversible.
+rows in a dataset, convert an Excel worksheet into CSV, drop rows by a
+substring rule, or compare two strings for similarity, csvsmith aims to keep
+the process predictable and reversible.
 
 Features
 --------
@@ -34,6 +36,7 @@ Features
 - row filtering by substring
 - Excel worksheet to CSV conversion
 - file moving by suffix
+- string distance and similarity analysis
 - a single command-line entrypoint with subcommands
 
 Installation
@@ -93,6 +96,20 @@ Deduplicate with report
 
    # Exclude columns (e.g. IDs or timestamps)
    deduped2, report2 = dedupe_with_report(rows, exclude=["id"])
+
+Analyze string distance
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   from csvsmith import analyze_pair
+
+   result = analyze_pair("kitten", "sitting")
+
+   print(result.get_relation_string())
+   print(result.damerau_levenshtein_distance)
+   print(result.jaro_winkler_score)
+   print(result.similarity_percentage)
 
 Drop rows in a CSV by column name
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -166,7 +183,8 @@ CLI Usage
 ---------
 
 csvsmith provides a single CLI entrypoint with subcommands for duplicate
-detection, CSV organization, Excel conversion, file moving, and row filtering.
+detection, CSV organization, Excel conversion, file moving, row filtering,
+and string comparison.
 
 Show duplicate rows
 ~~~~~~~~~~~~~~~~~~~
@@ -180,6 +198,19 @@ Save duplicate rows only:
 .. code-block:: bash
 
    csvsmith row-duplicates input.csv -o duplicates_only.csv
+
+Analyze string distance
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+   csvsmith string-distance "kitten" "sitting"
+
+Ignore case:
+
+.. code-block:: bash
+
+   csvsmith string-distance "Hello" "hello" --ignore-case
 
 Deduplicate and generate a report
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

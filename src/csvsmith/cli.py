@@ -17,6 +17,7 @@ from .row_dedup import (
     read_csv_rows,
     write_csv_rows,
 )
+from .string_distance import analyze_pair
 
 
 def _parse_suffixes(value: str | None) -> set[str]:
@@ -137,6 +138,16 @@ def cmd_drop_rows(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_string_distance(args: argparse.Namespace) -> int:
+    res = analyze_pair(args.string_a, args.string_b, args.ignore_case)
+
+    print(f"{'Classification':<18}: {res.get_relation_string()}")
+    print(f"{'D-Levenshtein Dist':<18}: {res.damerau_levenshtein_distance} changes")
+    print(f"{'Jaro-Winkler':<18}: {res.jaro_winkler_score:.4f}")
+    print(f"{'Similarity':<18}: {res.similarity_percentage:.2f}%")
+    return 0
+
+
 def _add_row_duplicates_parser(subparsers) -> None:
     parser = subparsers.add_parser("row-duplicates", help="Find duplicate rows in a CSV.")
     parser.add_argument("input", help="Input CSV file.")
@@ -207,6 +218,18 @@ def _add_drop_rows_parser(subparsers) -> None:
     parser.set_defaults(func=cmd_drop_rows)
 
 
+def _add_string_distance_parser(subparsers) -> None:
+    parser = subparsers.add_parser("string-distance", help="Analyze distance between two strings.")
+    parser.add_argument("string_a", help="First string.")
+    parser.add_argument("string_b", help="Second string.")
+    parser.add_argument(
+        "--ignore-case",
+        action="store_true",
+        help="Ignore case for distance calculation.",
+    )
+    parser.set_defaults(func=cmd_string_distance)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="csvsmith",
@@ -225,6 +248,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_move_files_parser(subparsers)
     _add_excel_to_csv_parser(subparsers)
     _add_drop_rows_parser(subparsers)
+    _add_string_distance_parser(subparsers)
 
     return parser
 

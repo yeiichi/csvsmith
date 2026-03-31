@@ -12,11 +12,16 @@ Public API:
 - DropRowsBySubstring
 - excel_to_csv
 - move_by_suffix
+- StringDistance
+- Relation
+- Result
+- analyze_pair
 
 Compatibility aliases:
 - CSVCleaner
 
 Submodules:
+- csvsmith.string_distance
 - csvsmith.row_dedup
 - csvsmith.classify
 - csvsmith.filter_rows
@@ -25,7 +30,7 @@ Submodules:
 - csvsmith.cli (CLI entrypoint)
 """
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 from .row_dedup import (
     count_duplicates_sorted,
@@ -39,6 +44,7 @@ from .classify import CSVClassifier
 from .filter_rows import DropRowsBySubstring, CSVCleaner
 from .excel2csv import excel_to_csv
 from .move_files import move_by_suffix
+from .string_distance import StringDistance, Relation, Result, analyze_pair
 
 __all__ = [
     "count_duplicates_sorted",
@@ -51,4 +57,8 @@ __all__ = [
     "DropRowsBySubstring",
     "excel_to_csv",
     "move_by_suffix",
+    "StringDistance",
+    "Relation",
+    "Result",
+    "analyze_pair",
 ]
