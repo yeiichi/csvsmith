@@ -113,7 +113,7 @@ Analyze string distance
    print(result.similarity_percentage)
 
 Clean numeric values
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -127,8 +127,6 @@ Clean numeric values
    print(val1)  # 1234.56
    print(val2)  # -100.0
    print(val3)  # 1234.56
-
-CLI Usage
 Drop rows in a CSV by column name
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -178,7 +176,7 @@ Move files by suffix
    print(f"Moved {moved_count} files.")
 
 CSV File Classification (Python)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
