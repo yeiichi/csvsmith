@@ -73,7 +73,7 @@ Count duplicate values
    # [('a', 3), ('b', 2)]
 
 Find duplicate rows in a CSV
-~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -111,6 +111,7 @@ Analyze string distance
    print(result.jaro_winkler_score)
    print(result.similarity_percentage)
 
+CLI Usage
 Drop rows in a CSV by column name
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
