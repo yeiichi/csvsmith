@@ -35,6 +35,7 @@ Features
 - rollback support via manifest
 - row filtering by substring
 - Excel worksheet to CSV conversion
+- numeric string cleaning and normalization
 - file moving by suffix
 - string distance and similarity analysis
 - a single command-line entrypoint with subcommands
@@ -110,6 +111,22 @@ Analyze string distance
    print(result.damerau_levenshtein_distance)
    print(result.jaro_winkler_score)
    print(result.similarity_percentage)
+
+Clean numeric values
+~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   from csvsmith import clean_numeric
+
+   # Handles separators and parentheses for negative numbers
+   val1 = clean_numeric("1,234.56")
+   val2 = clean_numeric("(100.00)")
+   val3 = clean_numeric("1 234,56", sep=" ", decimal=",")
+
+   print(val1)  # 1234.56
+   print(val2)  # -100.0
+   print(val3)  # 1234.56
 
 CLI Usage
 Drop rows in a CSV by column name
@@ -272,6 +289,19 @@ Move files by suffix
 
 This moves files whose suffix matches one of the given values. The suffixes can
 be written with or without a leading dot, and matching is case-insensitive.
+
+Clean numeric values
+~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+   csvsmith clean-numeric "1,234.56"
+
+Using custom separators:
+
+.. code-block:: bash
+
+   csvsmith clean-numeric "1 234,56" --sep " " --decimal ","
 
 Drop CSV rows
 ~~~~~~~~~~~~~

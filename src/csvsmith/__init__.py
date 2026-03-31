@@ -21,6 +21,7 @@ Compatibility aliases:
 - CSVCleaner
 
 Submodules:
+- csvsmith.clean_numeric
 - csvsmith.string_distance
 - csvsmith.row_dedup
 - csvsmith.classify
@@ -30,8 +31,9 @@ Submodules:
 - csvsmith.cli (CLI entrypoint)
 """
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
+from .clean_numeric import clean_numeric
 from .row_dedup import (
     count_duplicates_sorted,
     add_row_digest,
@@ -61,4 +63,5 @@ __all__ = [
     "Relation",
     "Result",
     "analyze_pair",
+    "clean_numeric",
 ]

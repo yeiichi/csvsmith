@@ -126,3 +126,23 @@ def test_cli_parses_move_files_command_with_suffixes_without_dots():
     assert args.source == "src_dir"
     assert args.dest == "dst_dir"
     assert args.suffixes == "csv,pdf"
+
+
+def test_cli_parses_clean_numeric_command():
+    parser = build_parser()
+    args = parser.parse_args(["clean-numeric", "1,234.56", "--sep", ",", "--decimal", "."])
+
+    assert args.command == "clean-numeric"
+    assert args.value == "1,234.56"
+    assert args.sep == ","
+    assert args.decimal == "."
+
+
+def test_cli_parses_string_distance_command():
+    parser = build_parser()
+    args = parser.parse_args(["string-distance", "a", "b", "--ignore-case"])
+
+    assert args.command == "string-distance"
+    assert args.string_a == "a"
+    assert args.string_b == "b"
+    assert args.ignore_case is True

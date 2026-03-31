@@ -9,6 +9,7 @@ from typing import Optional, Sequence
 from . import __version__
 from .classify import CSVClassifier
 from .excel2csv import excel_to_csv
+from .clean_numeric import clean_numeric
 from .filter_rows import DropRowsBySubstring
 from .move_files import move_by_suffix
 from .row_dedup import (
@@ -148,6 +149,16 @@ def cmd_string_distance(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_clean_numeric(args: argparse.Namespace) -> int:
+    try:
+        cleaned = clean_numeric(args.value, sep=args.sep, decimal=args.decimal)
+        print(cleaned)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+    return 0
+
+
 def _add_row_duplicates_parser(subparsers) -> None:
     parser = subparsers.add_parser("row-duplicates", help="Find duplicate rows in a CSV.")
     parser.add_argument("input", help="Input CSV file.")
@@ -230,6 +241,16 @@ def _add_string_distance_parser(subparsers) -> None:
     parser.set_defaults(func=cmd_string_distance)
 
 
+def _add_clean_numeric_parser(subparsers) -> None:
+    parser = subparsers.add_parser(
+        "clean-numeric", help="Clean and convert a numeric string to float."
+    )
+    parser.add_argument("value", help="Numeric value to clean.")
+    parser.add_argument("--sep", default=",", help="Group separator (default: ,).")
+    parser.add_argument("--decimal", default=".", help="Decimal separator (default: .).")
+    parser.set_defaults(func=cmd_clean_numeric)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="csvsmith",
@@ -249,6 +270,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_excel_to_csv_parser(subparsers)
     _add_drop_rows_parser(subparsers)
     _add_string_distance_parser(subparsers)
+    _add_clean_numeric_parser(subparsers)
 
     return parser
 
