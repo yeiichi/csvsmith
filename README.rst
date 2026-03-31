@@ -8,7 +8,7 @@ csvsmith
    :target: https://pypi.org/project/csvsmith/
 
 .. image:: https://img.shields.io/pypi/l/csvsmith.svg
-   :target: https://pypi.org/project/ccsvsmith/
+   :target: https://pypi.org/project/csvsmith/
 
 Introduction
 ------------
@@ -127,6 +127,7 @@ Clean numeric values
    print(val1)  # 1234.56
    print(val2)  # -100.0
    print(val3)  # 1234.56
+
 Drop rows in a CSV by column name
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -365,7 +366,7 @@ Example
 
 Suppose you have a CSV like this:
 
-.. code-block:: csv
+.. code-block:: text
 
    id,name,notes
    1,Alice,ok
@@ -380,7 +381,7 @@ Running:
 
 produces a filtered file containing:
 
-.. code-block:: csv
+.. code-block:: text
 
    id,name,notes
    1,Alice,ok
