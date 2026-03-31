@@ -1,128 +1,192 @@
-"""
-Row-deduplication helpers for csvsmith.
-
-Includes:
-- count_duplicates_sorted: generic iterable duplicate counter
-- add_row_digest: add a SHA-256 digest per row to a DataFrame
-- find_duplicate_rows: return only rows that have duplicates
-- dedupe_with_report: drop duplicates and report duplicate groups
-"""
-
 from __future__ import annotations
 
-from collections import Counter
+import csv
+from collections import Counter, defaultdict
 from hashlib import sha256
-from typing import Iterable, List, Tuple, Hashable, Sequence, Optional
+from pathlib import Path
+from typing import Hashable, Iterable, Mapping, Optional, Sequence
 
-import pandas as pd
+
+ROW_SEP = "\x1f"
+KEEP_OPTIONS = {"first", "last"}
+
+Row = dict[str, str]
+RowLike = Mapping[str, object]
 
 
 def count_duplicates_sorted(
     items: Iterable[Hashable],
     threshold: int = 2,
     reverse: bool = True,
-) -> List[Tuple[Hashable, int]]:
-    """
-    Count occurrences in an iterable and return items whose frequency
-    is at or above `threshold`, sorted by count.
-    """
+) -> list[tuple[Hashable, int]]:
+    """Count items and return those occurring at least `threshold` times."""
     counter = Counter(items)
-    duplicates = [(k, v) for k, v in counter.items() if v >= threshold]
+    duplicates = [(key, count) for key, count in counter.items() if count >= threshold]
     duplicates.sort(key=lambda x: x[1], reverse=reverse)
     return duplicates
 
 
+def read_csv_rows(csv_path: Path | str, encoding: str = "utf-8") -> list[Row]:
+    """Read a CSV file into a list of row dictionaries."""
+    path = Path(csv_path)
+    with path.open("r", encoding=encoding, newline="") as fp:
+        reader = csv.DictReader(fp)
+        return list(reader)
+
+
+def write_csv_rows(
+    csv_path: Path | str,
+    rows: Sequence[Mapping[str, object]],
+    *,
+    fieldnames: Sequence[str],
+    encoding: str = "utf-8",
+) -> None:
+    """Write row dictionaries to a CSV file."""
+    path = Path(csv_path)
+    with path.open("w", encoding=encoding, newline="") as fp:
+        writer = csv.DictWriter(fp, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+
+
+def _normalize_cell(value: object) -> str:
+    """Convert a cell value to a stable string for hashing."""
+    if value is None:
+        return ""
+    return str(value)
+
+
+def _resolve_columns(
+    rows: Sequence[RowLike],
+    *,
+    subset: Optional[Sequence[Hashable]] = None,
+    exclude: Optional[Sequence[Hashable]] = None,
+) -> list[str]:
+    """Resolve the effective column list used for comparison."""
+    if subset is None:
+        if not rows:
+            return []
+        cols = list(rows[0].keys())
+    else:
+        cols = [str(col) for col in subset]
+
+    if exclude:
+        exclude_set = {str(col) for col in exclude}
+        cols = [col for col in cols if col not in exclude_set]
+
+    return cols
+
+
+def make_row_digest(row: RowLike, *, columns: Sequence[str]) -> str:
+    """Build a SHA-256 digest for a row using selected columns."""
+    joined = ROW_SEP.join(_normalize_cell(row.get(col, "")) for col in columns)
+    return sha256(joined.encode("utf-8")).hexdigest()
+
+
 def add_row_digest(
-    df: pd.DataFrame,
+    rows: Sequence[RowLike],
     *,
     subset: Optional[Sequence[Hashable]] = None,
     exclude: Optional[Sequence[Hashable]] = None,
     colname: str = "row_digest",
     inplace: bool = False,
-) -> pd.DataFrame:
-    """
-    Add a SHA-256 digest for each row of a DataFrame.
-    """
-    if subset is None:
-        cols = list(df.columns)
-    else:
-        cols = list(subset)
+) -> list[dict[str, object]]:
+    """Add a row digest column and return the resulting rows."""
+    columns = _resolve_columns(rows, subset=subset, exclude=exclude)
 
-    if exclude:
-        exclude_set = set(exclude)
-        cols = [c for c in cols if c not in exclude_set]
+    out = rows if inplace else [dict(row) for row in rows]
 
-    concatted = df[cols].astype("string").fillna("").agg("\x1f".join, axis=1)
-    digests = concatted.map(lambda s: sha256(s.encode("utf-8")).hexdigest())
+    for row in out:
+        row[colname] = make_row_digest(row, columns=columns)
 
-    if inplace:
-        df[colname] = digests
-        return df
-
-    df2 = df.copy()
-    df2[colname] = digests
-    return df2
+    return [dict(row) for row in out]
 
 
 def find_duplicate_rows(
-    df: pd.DataFrame,
+    rows: Sequence[RowLike],
     *,
     subset: Optional[Sequence[Hashable]] = None,
-) -> pd.DataFrame:
-    """
-    Return only rows that participate in duplicates.
-    """
-    mask = df.duplicated(subset=subset, keep=False)
-    return df[mask]
+) -> list[dict[str, object]]:
+    """Return only rows that participate in duplicate groups."""
+    columns = _resolve_columns(rows, subset=subset)
+
+    grouped: dict[str, list[int]] = defaultdict(list)
+    for idx, row in enumerate(rows):
+        digest = make_row_digest(row, columns=columns)
+        grouped[digest].append(idx)
+
+    dup_indices = {
+        idx
+        for indices in grouped.values()
+        if len(indices) > 1
+        for idx in indices
+    }
+
+    return [dict(rows[idx]) for idx in sorted(dup_indices)]
 
 
 def dedupe_with_report(
-    df: pd.DataFrame,
+    rows: Sequence[RowLike],
     *,
     subset: Optional[Sequence[Hashable]] = None,
     exclude: Optional[Sequence[Hashable]] = None,
     keep: str = "first",
     digest_col: str = "row_digest",
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Drop duplicate rows and return a report of duplicate groups.
-    """
-    if subset is None:
-        cols = list(df.columns)
-    else:
-        cols = list(subset)
+) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+    """Drop duplicates and return `(deduped_rows, report)`."""
+    if keep not in KEEP_OPTIONS:
+        raise ValueError(f"keep must be one of {sorted(KEEP_OPTIONS)}")
 
-    if exclude:
-        exclude_set = set(exclude)
-        cols = [c for c in cols if c not in exclude_set]
+    columns = _resolve_columns(rows, subset=subset, exclude=exclude)
 
-    subset_for_dupes: Optional[Sequence[Hashable]]
-    subset_for_dupes = cols if cols else None
+    grouped: dict[str, list[int]] = defaultdict(list)
+    for idx, row in enumerate(rows):
+        digest = make_row_digest(row, columns=columns)
+        grouped[digest].append(idx)
 
-    work = add_row_digest(
-        df,
-        subset=subset_for_dupes,
-        exclude=None,
-        colname=digest_col,
-        inplace=False,
+    report = [
+        {
+            digest_col: digest,
+            "count": len(indices),
+            "indices": indices,
+        }
+        for digest, indices in grouped.items()
+        if len(indices) > 1
+    ]
+    report.sort(key=lambda x: x["count"], reverse=True)
+
+    kept_indices: set[int] = set()
+    for indices in grouped.values():
+        kept_indices.add(indices[0] if keep == "first" else indices[-1])
+
+    deduped_rows = [
+        dict(row)
+        for idx, row in enumerate(rows)
+        if idx in kept_indices
+    ]
+
+    return deduped_rows, report
+
+
+def dedupe_csv_file(
+    src: Path | str,
+    dst: Path | str,
+    *,
+    subset: Optional[Sequence[Hashable]] = None,
+    exclude: Optional[Sequence[Hashable]] = None,
+    keep: str = "first",
+    encoding: str = "utf-8",
+) -> list[dict[str, object]]:
+    """Deduplicate a CSV file, write the result, and return the report."""
+    rows = read_csv_rows(src, encoding=encoding)
+    deduped_rows, report = dedupe_with_report(
+        rows,
+        subset=subset,
+        exclude=exclude,
+        keep=keep,
     )
 
-    grouped = work.groupby(digest_col, dropna=False)
-    sizes = grouped.size().rename("count")
-    indices_map = {k: list(v) for k, v in grouped.indices.items()}
-    indices = pd.Series(indices_map, name="indices")
-
-    report = (
-        pd.concat([sizes, indices], axis=1)
-        .reset_index()
-        .rename(columns={"index": digest_col})
-    )
-
-    report = (
-        report[report["count"] > 1]
-        .sort_values("count", ascending=False)
-        .reset_index(drop=True)
-    )
-
-    df_deduped = df.drop_duplicates(subset=subset_for_dupes, keep=keep)
-    return df_deduped, report
+    fieldnames = list(rows[0].keys()) if rows else []
+    write_csv_rows(dst, deduped_rows, fieldnames=fieldnames, encoding=encoding)
+    return report

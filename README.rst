@@ -27,7 +27,7 @@ Features
 --------
 
 - row duplicate counting and reporting
-- DataFrame deduplication with reports
+- CSV deduplication with reports
 - CSV classification by header signature
 - dry-run and report-only classification modes
 - rollback support via manifest
@@ -69,33 +69,30 @@ Count duplicate values
    print(count_duplicates_sorted(items))
    # [('a', 3), ('b', 2)]
 
-Find duplicate rows in a DataFrame
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Find duplicate rows in a CSV
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
-   import pandas as pd
-   from csvsmith import find_duplicate_rows
+   from csvsmith import find_duplicate_rows, read_csv_rows
 
-   df = pd.read_csv("input.csv")
-   dup_rows = find_duplicate_rows(df)
+   rows = read_csv_rows("input.csv")
+   dup_rows = find_duplicate_rows(rows)
 
 Deduplicate with report
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
-   import pandas as pd
-   from csvsmith import dedupe_with_report
+   from csvsmith import dedupe_with_report, read_csv_rows, write_csv_rows
 
-   df = pd.read_csv("input.csv")
+   rows = read_csv_rows("input.csv")
 
-   deduped, report = dedupe_with_report(df)
-   deduped.to_csv("deduped.csv", index=False)
-   report.to_csv("duplicate_report.csv", index=False)
+   deduped, report = dedupe_with_report(rows)
+   write_csv_rows("deduped.csv", deduped, fieldnames=list(rows[0].keys()))
 
    # Exclude columns (e.g. IDs or timestamps)
-   deduped2, report2 = dedupe_with_report(df, exclude=["id"])
+   deduped2, report2 = dedupe_with_report(rows, exclude=["id"])
 
 Drop rows in a CSV by column name
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

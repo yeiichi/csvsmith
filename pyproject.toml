@@ -16,7 +16,6 @@ authors = [
 
 keywords = [
   "csv",
-  "pandas",
   "deduplication",
   "data-filtering",
   "file-organization",
@@ -33,7 +32,6 @@ classifiers = [
 ]
 
 dependencies = [
-  "pandas>=2.0",
   "openpyxl>=3.1",
 ]
 

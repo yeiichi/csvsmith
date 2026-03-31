@@ -1,17 +1,22 @@
 import argparse
+import csv
 import json
 import sys
 from pathlib import Path
 from typing import Optional, Sequence
 
-import pandas as pd
 
 from . import __version__
 from .classify import CSVClassifier
 from .excel2csv import excel_to_csv
 from .filter_rows import DropRowsBySubstring
 from .move_files import move_by_suffix
-from .row_dedup import dedupe_with_report, find_duplicate_rows
+from .row_dedup import (
+    dedupe_with_report,
+    find_duplicate_rows,
+    read_csv_rows,
+    write_csv_rows,
+)
 
 
 def _parse_suffixes(value: str | None) -> set[str]:
@@ -30,28 +35,33 @@ def _parse_suffixes(value: str | None) -> set[str]:
 
 
 def cmd_row_duplicates(args: argparse.Namespace) -> int:
-    df = pd.read_csv(args.input)
+    rows = read_csv_rows(args.input)
     subset = args.subset.split(",") if args.subset else None
-    dupes = find_duplicate_rows(df, subset=subset)
-    if dupes.empty:
+    dupes = find_duplicate_rows(rows, subset=subset)
+
+    if not dupes:
         print("No duplicate rows found.")
     else:
         print(f"Found {len(dupes)} duplicate rows:")
-        print(dupes.to_csv(index=False))
+        fieldnames = list(dupes[0].keys())
+        writer = csv.DictWriter(sys.stdout, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(dupes)
     return 0
 
 
 def cmd_dedupe(args: argparse.Namespace) -> int:
-    df = pd.read_csv(args.input)
+    rows = read_csv_rows(args.input)
     subset = args.subset.split(",") if args.subset else None
     exclude = args.exclude.split(",") if args.exclude else None
 
-    deduped_df, report = dedupe_with_report(
-        df, subset=subset, exclude=exclude, keep=args.keep
+    deduped_rows, report = dedupe_with_report(
+        rows, subset=subset, exclude=exclude, keep=args.keep
     )
 
     output_path = Path(args.output) if args.output else Path(args.input).with_suffix(".deduped.csv")
-    deduped_df.to_csv(output_path, index=False)
+    fieldnames = list(rows[0].keys()) if rows else []
+    write_csv_rows(output_path, deduped_rows, fieldnames=fieldnames)
     print(f"Wrote deduped CSV to: {output_path}")
 
     if args.report:

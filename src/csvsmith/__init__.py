@@ -6,9 +6,12 @@ Public API:
 - add_row_digest
 - find_duplicate_rows
 - dedupe_with_report
+- read_csv_rows
+- write_csv_rows
 - CSVClassifier
 - DropRowsBySubstring
 - excel_to_csv
+- move_by_suffix
 
 Compatibility aliases:
 - CSVCleaner
@@ -29,6 +32,8 @@ from .row_dedup import (
     add_row_digest,
     find_duplicate_rows,
     dedupe_with_report,
+    read_csv_rows,
+    write_csv_rows,
 )
 from .classify import CSVClassifier
 from .filter_rows import DropRowsBySubstring, CSVCleaner
@@ -40,6 +45,8 @@ __all__ = [
     "add_row_digest",
     "find_duplicate_rows",
     "dedupe_with_report",
+    "read_csv_rows",
+    "write_csv_rows",
     "CSVClassifier",
     "DropRowsBySubstring",
     "excel_to_csv",

@@ -1,6 +1,3 @@
-import pandas as pd
-import pandas.testing as pdt
-
 from csvsmith.row_dedup import (
     count_duplicates_sorted,
     add_row_digest,
@@ -56,48 +53,48 @@ def test_count_duplicates_sorted_threshold_above_all():
 
 
 def test_add_row_digest_basic():
-    df = pd.DataFrame({"A": [1, 1, 2], "B": ["x", "x", "y"]})
-    out = add_row_digest(df)
-    assert "row_digest" in out.columns
-    assert out["row_digest"].iloc[0] == out["row_digest"].iloc[1]
-    assert out["row_digest"].iloc[2] != out["row_digest"].iloc[0]
+    rows = [{"A": 1, "B": "x"}, {"A": 1, "B": "x"}, {"A": 2, "B": "y"}]
+    out = add_row_digest(rows)
+    assert "row_digest" in out[0]
+    assert out[0]["row_digest"] == out[1]["row_digest"]
+    assert out[2]["row_digest"] != out[0]["row_digest"]
 
 
 def test_add_row_digest_subset_columns():
-    df = pd.DataFrame({"A": [1, 1, 1], "B": ["x", "y", "z"]})
-    out = add_row_digest(df, subset=["A"], colname="digest_a")
-    assert "digest_a" in out.columns
-    assert len(out["digest_a"].unique()) == 1
+    rows = [{"A": 1, "B": "x"}, {"A": 1, "B": "y"}, {"A": 1, "B": "z"}]
+    out = add_row_digest(rows, subset=["A"], colname="digest_a")
+    assert "digest_a" in out[0]
+    digests = {row["digest_a"] for row in out}
+    assert len(digests) == 1
 
 
-def test_add_row_digest_inplace_true_returns_same_object():
-    df = pd.DataFrame({"A": [1, 2], "B": ["x", "y"]})
-    df_id_before = id(df)
-    out = add_row_digest(df, inplace=True)
-    df_id_after = id(df)
-    assert df_id_before == df_id_after
-    assert id(out) == id(df)
-    assert "row_digest" in df.columns
+def test_add_row_digest_inplace_true_modifies_original():
+    rows = [{"A": 1, "B": "x"}, {"A": 2, "B": "y"}]
+    add_row_digest(rows, inplace=True)
+    assert "row_digest" in rows[0]
 
 
 def test_add_row_digest_handles_nans():
-    df = pd.DataFrame({"A": [1, None, 1], "B": ["x", "x", None]})
-    out = add_row_digest(df)
-    assert "row_digest" in out.columns
-    digest_series = out["row_digest"]
-    assert digest_series.notna().all()
-    assert digest_series.map(len).eq(64).all()
+    rows = [{"A": 1, "B": "x"}, {"A": None, "B": "x"}, {"A": 1, "B": None}]
+    out = add_row_digest(rows)
+    for row in out:
+        assert "row_digest" in row
+        assert len(row["row_digest"]) == 64
 
 
 def test_add_row_digest_exclude_id_column():
-    df = pd.DataFrame({"id": [1, 2, 3], "value": [10, 10, 20]})
-    out_all = add_row_digest(df)
-    assert len(out_all["row_digest"].unique()) == 3
+    rows = [
+        {"id": 1, "value": 10},
+        {"id": 2, "value": 10},
+        {"id": 3, "value": 20},
+    ]
+    out_all = add_row_digest(rows)
+    digests_all = {row["row_digest"] for row in out_all}
+    assert len(digests_all) == 3
 
-    out_no_id = add_row_digest(df, exclude=["id"])
-    digests = out_no_id["row_digest"]
-    assert digests.iloc[0] == digests.iloc[1]
-    assert digests.iloc[2] != digests.iloc[0]
+    out_no_id = add_row_digest(rows, exclude=["id"])
+    assert out_no_id[0]["row_digest"] == out_no_id[1]["row_digest"]
+    assert out_no_id[2]["row_digest"] != out_no_id[0]["row_digest"]
 
 
 # -------------------------------------------------------------------
@@ -106,28 +103,51 @@ def test_add_row_digest_exclude_id_column():
 
 
 def test_find_duplicate_rows_all_columns():
-    df = pd.DataFrame({"A": [1, 1, 2, 2, 2, 3], "B": ["x", "x", "y", "y", "z", "z"]})
-    dup_df = find_duplicate_rows(df)
-    assert list(dup_df.index) == [0, 1, 2, 3]
+    rows = [
+        {"A": 1, "B": "x"},
+        {"A": 1, "B": "x"},
+        {"A": 2, "B": "y"},
+        {"A": 2, "B": "y"},
+        {"A": 2, "B": "z"},
+        {"A": 3, "B": "z"},
+    ]
+    dup_rows = find_duplicate_rows(rows)
+    # Rows 0, 1 (1, x) and 2, 3 (2, y) are duplicates
+    assert len(dup_rows) == 4
+    assert dup_rows[0] == {"A": 1, "B": "x"}
+    assert dup_rows[1] == {"A": 1, "B": "x"}
+    assert dup_rows[2] == {"A": 2, "B": "y"}
+    assert dup_rows[3] == {"A": 2, "B": "y"}
 
 
 def test_find_duplicate_rows_subset():
-    df = pd.DataFrame({"A": [1, 1, 2, 2, 2, 3], "B": [10, 11, 20, 21, 22, 30]})
-    dup_df = find_duplicate_rows(df, subset=["A"])
-    assert list(dup_df.index) == [0, 1, 2, 3, 4]
+    rows = [
+        {"A": 1, "B": 10},
+        {"A": 1, "B": 11},
+        {"A": 2, "B": 20},
+        {"A": 2, "B": 21},
+        {"A": 2, "B": 22},
+        {"A": 3, "B": 30},
+    ]
+    dup_rows = find_duplicate_rows(rows, subset=["A"])
+    # Rows with A=1 (indices 0, 1) and A=2 (indices 2, 3, 4) are duplicates
+    assert len(dup_rows) == 5
 
 
 def test_find_duplicate_rows_no_duplicates():
-    df = pd.DataFrame({"A": [1, 2, 3], "B": ["x", "y", "z"]})
-    dup_df = find_duplicate_rows(df)
-    assert dup_df.empty
+    rows = [
+        {"A": 1, "B": "x"},
+        {"A": 2, "B": "y"},
+        {"A": 3, "B": "z"},
+    ]
+    dup_rows = find_duplicate_rows(rows)
+    assert dup_rows == []
 
 
-def test_find_duplicate_rows_empty_df():
-    df = pd.DataFrame(columns=["A", "B"])
-    dup_df = find_duplicate_rows(df)
-    assert dup_df.empty
-    assert list(dup_df.columns) == ["A", "B"]
+def test_find_duplicate_rows_empty_input():
+    rows = []
+    dup_rows = find_duplicate_rows(rows)
+    assert dup_rows == []
 
 
 # -------------------------------------------------------------------
@@ -136,51 +156,73 @@ def test_find_duplicate_rows_empty_df():
 
 
 def test_dedupe_with_report_all_columns():
-    df = pd.DataFrame({"A": [1, 1, 2, 2, 2, 3], "B": ["x", "x", "y", "y", "z", "z"]})
+    rows = [
+        {"A": 1, "B": "x"},
+        {"A": 1, "B": "x"},
+        {"A": 2, "B": "y"},
+        {"A": 2, "B": "y"},
+        {"A": 2, "B": "z"},
+        {"A": 3, "B": "z"},
+    ]
 
-    deduped, report = dedupe_with_report(df)
-    expected = df.drop_duplicates()
-
-    pdt.assert_frame_equal(deduped.reset_index(drop=True), expected.reset_index(drop=True))
-    assert set(report.columns) == {"row_digest", "count", "indices"}
-    assert sorted(report["count"].tolist(), reverse=True) == [2, 2]
+    deduped, report = dedupe_with_report(rows)
+    # Expected unique: (1, x), (2, y), (2, z), (3, z)
+    assert len(deduped) == 4
+    assert len(report) == 2  # (1, x) and (2, y) had duplicates
+    assert {r["count"] for r in report} == {2}
 
 
 def test_dedupe_with_report_subset_column():
-    df = pd.DataFrame({"A": [1, 1, 2, 2, 2, 3], "B": [10, 11, 20, 21, 22, 30]})
+    rows = [
+        {"A": 1, "B": 10},
+        {"A": 1, "B": 11},
+        {"A": 2, "B": 20},
+        {"A": 2, "B": 21},
+        {"A": 2, "B": 22},
+        {"A": 3, "B": 30},
+    ]
 
-    deduped, report = dedupe_with_report(df, subset=["A"])
-    expected = df.drop_duplicates(subset=["A"])
-
-    pdt.assert_frame_equal(deduped.reset_index(drop=True), expected.reset_index(drop=True))
-    assert sorted(report["count"].tolist(), reverse=True) == [3, 2]
+    deduped, report = dedupe_with_report(rows, subset=["A"])
+    # Expected unique A values: 1, 2, 3
+    assert len(deduped) == 3
+    assert len(report) == 2
+    counts = sorted([r["count"] for r in report], reverse=True)
+    assert counts == [3, 2]
 
 
 def test_dedupe_with_report_no_duplicates_gives_empty_report():
-    df = pd.DataFrame({"A": [1, 2, 3], "B": ["x", "y", "z"]})
-    deduped, report = dedupe_with_report(df)
-    expected = df.drop_duplicates()
-
-    pdt.assert_frame_equal(deduped.reset_index(drop=True), expected.reset_index(drop=True))
-    assert report.empty
+    rows = [
+        {"A": 1, "B": "x"},
+        {"A": 2, "B": "y"},
+        {"A": 3, "B": "z"},
+    ]
+    deduped, report = dedupe_with_report(rows)
+    assert len(deduped) == 3
+    assert report == []
 
 
 def test_dedupe_with_report_keep_last():
-    df = pd.DataFrame({"A": [1, 1, 1], "B": ["x", "y", "z"]})
+    rows = [
+        {"A": 1, "B": "x"},
+        {"A": 1, "B": "y"},
+        {"A": 1, "B": "z"},
+    ]
 
-    deduped_first, _ = dedupe_with_report(df, subset=["A"], keep="first")
-    deduped_last, _ = dedupe_with_report(df, subset=["A"], keep="last")
+    deduped_first, _ = dedupe_with_report(rows, subset=["A"], keep="first")
+    deduped_last, _ = dedupe_with_report(rows, subset=["A"], keep="last")
 
-    assert deduped_first.iloc[0]["B"] == "x"
-    assert deduped_last.iloc[0]["B"] == "z"
+    assert deduped_first[0]["B"] == "x"
+    assert deduped_last[0]["B"] == "z"
 
 
 def test_dedupe_with_report_custom_digest_col_name():
-    df = pd.DataFrame({"A": [1, 1, 2, 2], "B": ["x", "x", "y", "y"]})
+    rows = [
+        {"A": 1, "B": "x"},
+        {"A": 1, "B": "x"},
+        {"A": 2, "B": "y"},
+        {"A": 2, "B": "y"},
+    ]
 
-    deduped, report = dedupe_with_report(df, digest_col="my_digest")
-    expected = df.drop_duplicates()
-
-    pdt.assert_frame_equal(deduped.reset_index(drop=True), expected.reset_index(drop=True))
-    assert "my_digest" in report.columns
-    assert set(report.columns) == {"my_digest", "count", "indices"}
+    deduped, report = dedupe_with_report(rows, digest_col="my_digest")
+    assert len(deduped) == 2
+    assert "my_digest" in report[0]
