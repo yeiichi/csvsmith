@@ -31,7 +31,7 @@ Submodules:
 - csvsmith.cli (CLI entrypoint)
 """
 
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 
 from .clean_numeric import clean_numeric
 from .row_dedup import (

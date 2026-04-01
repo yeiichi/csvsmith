@@ -124,9 +124,13 @@ Clean numeric values
    val2 = clean_numeric("(100.00)")
    val3 = clean_numeric("1 234,56", sep=" ", decimal=",")
 
+   # Use relaxed mode to return original value on failure instead of raising ValueError
+   val4 = clean_numeric("not a number", relaxed=True)
+
    print(val1)  # 1234.56
    print(val2)  # -100.0
    print(val3)  # 1234.56
+   print(val4)  # "not a number"
 
 Drop rows in a CSV by column name
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -301,6 +305,12 @@ Using custom separators:
 .. code-block:: bash
 
    csvsmith clean-numeric "1 234,56" --sep " " --decimal ","
+
+Relaxed mode (returns original string on failure):
+
+.. code-block:: bash
+
+   csvsmith clean-numeric "not a number" --relaxed
 
 Drop CSV rows
 ~~~~~~~~~~~~~
