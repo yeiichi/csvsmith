@@ -138,6 +138,17 @@ def test_cli_parses_clean_numeric_command():
     assert args.decimal == "."
 
 
+def test_cli_parses_clean_numeric_command_with_relaxed_mode():
+    parser = build_parser()
+    args = parser.parse_args(
+        ["clean-numeric", "not-a-number", "--relaxed"]
+    )
+
+    assert args.command == "clean-numeric"
+    assert args.value == "not-a-number"
+    assert args.relaxed is True
+
+
 def test_cli_parses_string_distance_command():
     parser = build_parser()
     args = parser.parse_args(["string-distance", "a", "b", "--ignore-case"])

@@ -151,7 +151,12 @@ def cmd_string_distance(args: argparse.Namespace) -> int:
 
 def cmd_clean_numeric(args: argparse.Namespace) -> int:
     try:
-        cleaned = clean_numeric(args.value, sep=args.sep, decimal=args.decimal)
+        cleaned = clean_numeric(
+            args.value,
+            sep=args.sep,
+            decimal=args.decimal,
+            relaxed=args.relaxed,
+        )
         print(cleaned)
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
@@ -248,6 +253,11 @@ def _add_clean_numeric_parser(subparsers) -> None:
     parser.add_argument("value", help="Numeric value to clean.")
     parser.add_argument("--sep", default=",", help="Group separator (default: ,).")
     parser.add_argument("--decimal", default=".", help="Decimal separator (default: .).")
+    parser.add_argument(
+        "--relaxed",
+        action="store_true",
+        help="Return the original input when it is not numeric.",
+    )
     parser.set_defaults(func=cmd_clean_numeric)
 
 

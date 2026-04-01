@@ -83,11 +83,14 @@ def _has_valid_grouping(numeric_text: str, *, decimal: str) -> bool:
     return bool(NUMBER_PATTERN.fullmatch(stripped_text))
 
 
-def clean_numeric(value: Any, *, sep: str = ",", decimal: str = ".") -> float:
+def clean_numeric(
+    value: Any, *, sep: str = ",", decimal: str = ".", relaxed: bool = False
+) -> float | Any:
     """
     Cleans and converts a given input to a float by normalizing its numeric representation.
     Handles separators and decimal points based on the provided arguments. If the input
-    value is invalid or cannot be converted, a ValueError is raised.
+    value is invalid or cannot be converted, a ValueError is raised unless relaxed mode
+    is enabled.
 
     :param value: The input value to be cleaned and converted.
     :type value: Any
@@ -95,9 +98,11 @@ def clean_numeric(value: Any, *, sep: str = ",", decimal: str = ".") -> float:
     :type sep: str
     :param decimal: The character used as a decimal point in the input value. Default is ".".
     :type decimal: str
-    :return: The cleaned and converted numeric value as a float.
-    :rtype: float
-    :raises ValueError: If the input value cannot be converted to a valid number.
+    :param relaxed: If True, return the original input when it is not numeric.
+    :type relaxed: bool
+    :return: The cleaned and converted numeric value as a float, or the original value in relaxed mode.
+    :rtype: float | Any
+    :raises ValueError: If the input value cannot be converted to a valid number and relaxed is False.
     """
     if value is None:
         return 0.0
@@ -105,6 +110,8 @@ def clean_numeric(value: Any, *, sep: str = ",", decimal: str = ".") -> float:
     normalized_number_text = _normalize_numeric_text(value, sep=sep, decimal=decimal)
 
     if not _has_valid_grouping(normalized_number_text, decimal=decimal):
+        if relaxed:
+            return value
         raise ValueError(f"Could not convert {value!r} to a valid number.")
 
     numeric_text = SEPARATOR_PATTERN.sub("", normalized_number_text)
@@ -112,4 +119,6 @@ def clean_numeric(value: Any, *, sep: str = ",", decimal: str = ".") -> float:
     try:
         return float(numeric_text)
     except ValueError as exc:
+        if relaxed:
+            return value
         raise ValueError(f"Could not convert {value!r} to a valid number.") from exc
