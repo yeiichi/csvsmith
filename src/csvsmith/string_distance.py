@@ -75,7 +75,13 @@ class StringDistance:
 
     @staticmethod
     def strip_all(s: str) -> str:
-        return "".join(ch for ch in s if not ch.isspace())
+        """
+        Remove all whitespace characters from a string.
+
+        Uses split/join logic so any whitespace character acts as a separator,
+        including spaces, tabs, and newlines.
+        """
+        return "".join(s.split())
 
     @staticmethod
     def equals_ignore_case(a: str, b: str) -> bool:
