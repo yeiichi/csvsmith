@@ -3,419 +3,210 @@ csvsmith
 
 .. image:: https://img.shields.io/pypi/v/csvsmith.svg
    :target: https://pypi.org/project/csvsmith/
+   :alt: PyPI version
 
 .. image:: https://img.shields.io/pypi/pyversions/csvsmith.svg
    :target: https://pypi.org/project/csvsmith/
+   :alt: Supported Python versions
 
 .. image:: https://img.shields.io/pypi/l/csvsmith.svg
-   :target: https://pypi.org/project/csvsmith/
+   :target: https://opensource.org/licenses/
+   :alt: License
 
-Introduction
-------------
+Small, focused CSV utilities for common data wrangling tasks.
 
-csvsmith is a lightweight collection of CSV utilities designed for data
-integrity, deduplication, organization, Excel-to-CSV conversion, and
-string-similarity analysis.
-
-It provides a small Python API for programmatic data filtering and a single
-CLI entrypoint for quick operations.
-
-Whether you need to organize CSV files by header signatures, find duplicate
-rows in a dataset, convert an Excel worksheet into CSV, drop rows by a
-substring rule, or compare two strings for similarity, csvsmith aims to keep
-the process predictable and reversible.
+``csvsmith`` provides a handful of practical tools for working with CSV
+files, including cleaning numeric values, filtering rows, deduplicating
+records, classifying files, converting Excel spreadsheets to CSV, moving
+files by suffix, and finding matches inside CSV content.
 
 Features
 --------
 
-- row duplicate counting and reporting
-- CSV deduplication with reports
-- CSV classification by header signature
-- dry-run and report-only classification modes
-- rollback support via manifest
-- row filtering by substring
-- Excel worksheet to CSV conversion
-- numeric string cleaning and normalization
-- file moving by suffix
-- string distance and similarity analysis
-- a single command-line entrypoint with subcommands
+- Clean numeric strings into normalized values
+- Filter CSV rows by substring matching
+- Deduplicate row data and generate reports
+- Classify CSV files into folders based on headers/signatures
+- Convert Excel workbooks to CSV
+- Move files by suffix
+- Find matching values inside CSV files
+- Use the tools either from Python or from the command line
 
 Installation
 ------------
 
-From PyPI:
+Install the package in your environment as usual for your project setup.
 
-.. code-block:: bash
+Example:
+
+.. code-block:: console
 
    pip install csvsmith
 
-For local development:
+If you are developing locally, install it in editable mode from the project
+root:
 
-.. code-block:: bash
+.. code-block:: console
 
-   git clone https://github.com/yeiichi/csvsmith.git
-   cd csvsmith
-   python -m venv .venv
-   source .venv/bin/activate
-   pip install -e .[dev]
+   pip install -e .
 
-Python API Usage
-----------------
+Quick start
+-----------
 
-Count duplicate values
-~~~~~~~~~~~~~~~~~~~~~~
+You can use the library from Python:
 
 .. code-block:: python
 
-   from csvsmith import count_duplicates_sorted
-
-   items = ["a", "b", "a", "c", "a", "b"]
-   print(count_duplicates_sorted(items))
-   # [('a', 3), ('b', 2)]
-
-Find duplicate rows in a CSV
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   from csvsmith import find_duplicate_rows, read_csv_rows
-
-   rows = read_csv_rows("input.csv")
-   dup_rows = find_duplicate_rows(rows)
-
-Deduplicate with report
-~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   from csvsmith import dedupe_with_report, read_csv_rows, write_csv_rows
-
-   rows = read_csv_rows("input.csv")
-
-   deduped, report = dedupe_with_report(rows)
-   write_csv_rows("deduped.csv", deduped, fieldnames=list(rows[0].keys()))
-
-   # Exclude columns (e.g. IDs or timestamps)
-   deduped2, report2 = dedupe_with_report(rows, exclude=["id"])
-
-Analyze string distance
-~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   from csvsmith import analyze_pair
-
-   result = analyze_pair("kitten", "sitting")
-
-   print(result.get_relation_string())
-   print(result.damerau_levenshtein_distance)
-   print(result.jaro_winkler_score)
-   print(result.similarity_percentage)
-
-Clean numeric values
-~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   from csvsmith import clean_numeric
-
-   # Handles separators and parentheses for negative numbers
-   val1 = clean_numeric("1,234.56")
-   val2 = clean_numeric("(100.00)")
-   val3 = clean_numeric("1 234,56", sep=" ", decimal=",")
-
-   # Use relaxed mode to return original value on failure instead of raising ValueError
-   val4 = clean_numeric("not a number", relaxed=True)
-
-   print(val1)  # 1234.56
-   print(val2)  # -100.0
-   print(val3)  # 1234.56
-   print(val4)  # "not a number"
-
-Drop rows in a CSV by column name
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-   from csvsmith import DropRowsBySubstring
-
-   cleaner = DropRowsBySubstring(
-       "input.csv",
-       column_name="notes",
-       unwanted_text="spam",
-       case_sensitive=False,
+   from csvsmith import (
+       clean_numeric,
+       dedupe_with_report,
+       excel_to_csv,
+       find_matches_in_csv,
+       move_by_suffix,
    )
 
-   cleaner.write_filtered_rows()
+   print(clean_numeric("1,234.56"))
 
-If you are upgrading from an older version, CSVCleaner is still available as a
-compatibility alias, but DropRowsBySubstring is the preferred name.
+Or use the command-line interface:
 
-Convert Excel to CSV
-~~~~~~~~~~~~~~~~~~~~
+.. code-block:: console
+
+   csvsmith --help
+
+Command-line usage
+------------------
+
+The package provides a CLI with several subcommands.
+
+Clean numeric values:
+
+.. code-block:: console
+
+   csvsmith clean-numeric "1,234.56" --sep "," --decimal "."
+
+Filter rows in a CSV:
+
+.. code-block:: console
+
+   csvsmith drop-rows input.csv notes spam --case-insensitive --drop-header
+
+Deduplicate rows:
+
+.. code-block:: console
+
+   csvsmith dedupe input.csv -o out.csv --subset id --keep first
+
+Classify CSV files:
+
+.. code-block:: console
+
+   csvsmith classify src_dir dst_dir --mode relaxed --match subset --auto --dry-run
+
+Convert Excel to CSV:
+
+.. code-block:: console
+
+   csvsmith excel2csv input.xlsx
+
+Move files by suffix:
+
+.. code-block:: console
+
+   csvsmith move-files src_dir dst_dir --suffixes .csv,.pdf
+
+Find matches in a CSV:
+
+.. code-block:: console
+
+   csvsmith find-matches input.csv target --ignore-case --ignore-whitespace
+
+Find matches in a CSV
+---------------------
+
+``find_matches_in_csv`` searches a CSV file for a target value and returns
+match records containing coordinates and row context information.
+
+Python API:
 
 .. code-block:: python
 
-   from csvsmith import excel_to_csv
+   from csvsmith import find_matches_in_csv
 
-   csv_path = excel_to_csv(
-       "input.xlsx",
-       sheet_name="Details",
-   )
+   results = find_matches_in_csv("input.csv", "target")
 
-   print(csv_path)
+CLI:
 
-Move files by suffix
-~~~~~~~~~~~~~~~~~~~~
+.. code-block:: console
+
+   csvsmith find-matches input.csv target
+
+Options:
+
+- ``--ignore-case``: ignore case while matching
+- ``--ignore-whitespace``: ignore whitespace while matching
+- ``--no-nfkc``: disable NFKC normalization
+
+If matches are found, the CLI prints formatted JSON. If no matches are found,
+it prints a simple message.
+
+Other Python APIs
+-----------------
+
+The package also exposes a few other helper functions and classes from its
+top-level API.
+
+Numeric and row tools:
 
 .. code-block:: python
 
-   from csvsmith import move_by_suffix
-
-   moved_count = move_by_suffix(
-       src_dir="./raw",
-       dst_dir="./processed",
-       suffixes=[".csv", ".pdf"],
+   from csvsmith import (
+       clean_numeric,
+       count_duplicates_sorted,
+       add_row_digest,
+       find_duplicate_rows,
+       dedupe_with_report,
+       read_csv_rows,
+       write_csv_rows,
    )
 
-   print(f"Moved {moved_count} files.")
-
-CSV File Classification (Python)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+CSV classification and filtering:
 
 .. code-block:: python
 
-   from csvsmith.tools.classify import CSVClassifier
+   from csvsmith import CSVClassifier, DropRowsBySubstring, CSVCleaner
 
-   classifier = CSVClassifier(
-       source_dir="./raw_data",
-       dest_dir="./organized",
-       auto=True,
-       mode="relaxed",        # or "strict"
-       match="exact",         # or "contains"
-   )
+File and conversion helpers:
 
-   classifier.run()
+.. code-block:: python
 
-   # Roll back using the generated manifest
-   classifier.rollback("./organized/manifest_YYYYMMDD_HHMMSS.json")
+   from csvsmith import excel_to_csv, move_by_suffix
 
-CLI Usage
----------
+String comparison utilities:
 
-csvsmith provides a single CLI entrypoint with subcommands for duplicate
-detection, CSV organization, Excel conversion, file moving, row filtering,
-and string comparison.
+.. code-block:: python
 
-Show duplicate rows
-~~~~~~~~~~~~~~~~~~~
+   from csvsmith import StringDistance, Relation, Result, analyze_pair
 
-.. code-block:: bash
+Project structure
+-----------------
 
-   csvsmith row-duplicates input.csv
+The code is organized into two main areas:
 
-Save duplicate rows only:
+- ``csvsmith.tools`` for higher-level CSV workflows
+- ``csvsmith.utils`` for reusable utility helpers
 
-.. code-block:: bash
+Testing
+-------
 
-   csvsmith row-duplicates input.csv -o duplicates_only.csv
+Run the test suite with your preferred Python test runner.
 
-Analyze string distance
-~~~~~~~~~~~~~~~~~~~~~~~
+Example:
 
-.. code-block:: bash
+.. code-block:: console
 
-   csvsmith string-distance "kitten" "sitting"
-
-Ignore case:
-
-.. code-block:: bash
-
-   csvsmith string-distance "Hello" "hello" --ignore-case
-
-Deduplicate and generate a report
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: bash
-
-   csvsmith dedupe input.csv -o deduped.csv --report duplicate_report.json
-
-Convert Excel to CSV
-~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: bash
-
-   csvsmith excel-to-csv input.xlsx
-
-Select a named worksheet:
-
-.. code-block:: bash
-
-   csvsmith excel-to-csv input.xlsx --sheet-name Details
-
-Write to a custom output path:
-
-.. code-block:: bash
-
-   csvsmith excel-to-csv input.xlsx -o output/result.csv
-
-Classify CSVs
-~~~~~~~~~~~~~
-
-.. code-block:: bash
-
-   # Dry-run (preview only)
-   csvsmith classify ./raw ./out --auto --dry-run
-
-   # Exact matching (default)
-   csvsmith classify ./raw ./out
-
-   # Relaxed matching (ignore col order)
-   csvsmith classify ./raw ./out --mode relaxed
-
-   # Subset matching (signature columns must be present)
-   csvsmith classify ./raw ./out --match contains
-
-   # Report-only (plan without moving files)
-   csvsmith classify ./raw ./out --auto --report-only
-
-   # Roll back using manifest
-   # Use the Python API for rollback:
-   # classifier.rollback("./out/manifest_YYYYMMDD_HHMMSS.json")
-
-Move files by suffix
-~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: bash
-
-   csvsmith move-files src_dir dst_dir --suffixes csv,pdf
-
-This moves files whose suffix matches one of the given values. The suffixes can
-be written with or without a leading dot, and matching is case-insensitive.
-
-Clean numeric values
-~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: bash
-
-   csvsmith clean-numeric "1,234.56"
-
-Using custom separators:
-
-.. code-block:: bash
-
-   csvsmith clean-numeric "1 234,56" --sep " " --decimal ","
-
-Relaxed mode (returns original string on failure):
-
-.. code-block:: bash
-
-   csvsmith clean-numeric "not a number" --relaxed
-
-Drop CSV rows
-~~~~~~~~~~~~~
-
-Use the ``drop-rows`` subcommand to remove rows from a CSV file when a chosen
-column contains an unwanted substring.
-
-The command expects three positional arguments:
-
-- input: path to the source CSV file
-- column_name: the header name of the column to inspect
-- unwanted_text: the text that, if found in the chosen column, causes a row to be removed
-
-It also supports two optional flags:
-
-- --case-insensitive: match unwanted_text without regard to letter case
-- --drop-header: do not copy the first row to the output file
-
-The output is written next to the input file using the same name with
-``.filtered.csv`` appended. For example:
-
-- orders.csv -> orders.filtered.csv
-
-Basic usage
-^^^^^^^^^^^
-
-.. code-block:: bash
-
-   csvsmith drop-rows input.csv notes spam
-
-This removes every row where the notes column contains spam. The header row is
-preserved by default.
-
-Case-insensitive matching
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. code-block:: bash
-
-   csvsmith drop-rows input.csv notes spam --case-insensitive
-
-This is useful when the data may contain values such as Spam, SPAM, or sPaM.
-
-Skip the header row
-^^^^^^^^^^^^^^^^^^^
-
-.. code-block:: bash
-
-   csvsmith drop-rows input.csv notes spam --drop-header
-
-Use this only if you explicitly want the output file to contain data rows only.
-
-How to use it effectively
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-- Make sure column_name exactly matches a header value in the CSV.
-- Choose a substring that is specific enough to avoid removing unrelated rows.
-- Use --case-insensitive when the source data is inconsistent in capitalization.
-- Keep the header unless you are intentionally producing a headerless file.
-- If the column name is missing, the command will fail with a clear error.
-
-Example
-^^^^^^^
-
-Suppose you have a CSV like this:
-
-.. code-block:: text
-
-   id,name,notes
-   1,Alice,ok
-   2,Bob,contains spam here
-   3,Carol,ok
-
-Running:
-
-.. code-block:: bash
-
-   csvsmith drop-rows input.csv notes spam
-
-produces a filtered file containing:
-
-.. code-block:: text
-
-   id,name,notes
-   1,Alice,ok
-   3,Carol,ok
-
-Report-only mode
-~~~~~~~~~~~~~~~~
-
-``--report-only`` scans matching CSVs and writes a manifest describing what
-would happen, without touching the filesystem. This enables downstream
-pipelines to consume the classification plan for custom processing.
-
-Philosophy
-----------
-
-1. CSVs deserve tools that are simple, predictable, and transparent.
-2. A row has meaning only when its identity is stable and hashable.
-3. Collisions are sin; determinism is virtue.
-4. Let no delimiter sow ambiguity among fields.
-5. Love thy \x1f — the unseen separator, guardian of clean hashes.
-6. The pipeline should be silent unless something is wrong.
-7. Your data deserves respect — and your tools should help you give it.
+   pytest
 
 License
 -------
 
-MIT License.
+See the project license for details.

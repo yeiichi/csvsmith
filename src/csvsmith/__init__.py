@@ -48,6 +48,7 @@ from .tools.classify import CSVClassifier
 from .tools.filter_rows import DropRowsBySubstring, CSVCleaner
 from .tools.excel2csv import excel_to_csv
 from .tools.move_files import move_by_suffix
+from .tools.find_matches_in_csv import find_matches_in_csv
 from .utils.distance import StringDistance, Relation, Result, analyze_pair
 
 __all__ = [
@@ -61,6 +62,7 @@ __all__ = [
     "DropRowsBySubstring",
     "excel_to_csv",
     "move_by_suffix",
+    "find_matches_in_csv",
     "StringDistance",
     "Relation",
     "Result",
