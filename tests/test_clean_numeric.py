@@ -1,5 +1,5 @@
 import pytest
-from csvsmith.tools.clean_numeric import clean_numeric
+from csvsmith.utils.clean_numeric import clean_numeric
 
 
 def test_clean_numeric_with_valid_integer_string() -> None:

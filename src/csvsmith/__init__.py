@@ -33,7 +33,7 @@ Submodules:
 
 __version__ = "0.7.0"
 
-from .tools.clean_numeric import clean_numeric
+from .utils.clean_numeric import clean_numeric
 from .tools.row_dedup import (
     add_row_digest,
     find_duplicate_rows,

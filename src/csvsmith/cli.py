@@ -9,7 +9,7 @@ from typing import Optional, Sequence
 from . import __version__
 from .tools.classify import CSVClassifier
 from .tools.excel2csv import excel_to_csv
-from .tools.clean_numeric import clean_numeric
+from .utils.clean_numeric import clean_numeric
 from .tools.filter_rows import DropRowsBySubstring
 from .tools.move_files import move_by_suffix, normalize_suffixes
 from .tools.row_dedup import (
