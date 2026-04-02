@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from csvsmith.filter_rows import DropRowsBySubstring
+from csvsmith.tools.filter_rows import DropRowsBySubstring
 
 
 def test_write_filtered_rows_keeps_header_and_filters_matching_rows(tmp_path: Path):

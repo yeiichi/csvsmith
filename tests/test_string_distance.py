@@ -1,4 +1,4 @@
-from csvsmith.string_distance import StringDistance, Relation
+from csvsmith.utils.distance import StringDistance, Relation
 
 def test_exact_match():
     res = StringDistance.analyze("hello", "hello")

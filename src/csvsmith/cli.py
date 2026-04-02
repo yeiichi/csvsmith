@@ -7,18 +7,17 @@ from typing import Optional, Sequence
 
 
 from . import __version__
-from .classify import CSVClassifier
-from .excel2csv import excel_to_csv
-from .clean_numeric import clean_numeric
-from .filter_rows import DropRowsBySubstring
-from .move_files import move_by_suffix
-from .row_dedup import (
+from .tools.classify import CSVClassifier
+from .tools.excel2csv import excel_to_csv
+from .tools.clean_numeric import clean_numeric
+from .tools.filter_rows import DropRowsBySubstring
+from .tools.move_files import move_by_suffix
+from .tools.row_dedup import (
     dedupe_with_report,
     find_duplicate_rows,
-    read_csv_rows,
-    write_csv_rows,
 )
-from .string_distance import analyze_pair
+from .utils.distance import analyze_pair
+from .utils.io import read_csv_rows, write_csv_rows
 
 
 def _parse_suffixes(value: str | None) -> set[str]:

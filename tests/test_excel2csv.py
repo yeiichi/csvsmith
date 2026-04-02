@@ -2,7 +2,7 @@ from pathlib import Path
 
 from openpyxl import Workbook
 
-from csvsmith.excel2csv import excel_to_csv
+from csvsmith.tools.excel2csv import excel_to_csv
 
 
 def _create_workbook(path: Path) -> None:

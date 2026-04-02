@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from csvsmith.move_files import move_by_suffix, normalize_suffixes
+from csvsmith.tools.move_files import move_by_suffix, normalize_suffixes
 
 
 def test_normalize_suffixes_adds_leading_dot_and_lowercases() -> None:

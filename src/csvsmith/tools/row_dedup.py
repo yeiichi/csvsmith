@@ -6,48 +6,13 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Hashable, Iterable, Mapping, Optional, Sequence
 
+from ..utils.io import read_csv_rows, write_csv_rows
 
-ROW_SEP = "\x1f"
 KEEP_OPTIONS = {"first", "last"}
+ROW_SEP = "\x1f"
 
 Row = dict[str, str]
 RowLike = Mapping[str, object]
-
-
-def count_duplicates_sorted(
-    items: Iterable[Hashable],
-    threshold: int = 2,
-    reverse: bool = True,
-) -> list[tuple[Hashable, int]]:
-    """Count items and return those occurring at least `threshold` times."""
-    counter = Counter(items)
-    duplicates = [(key, count) for key, count in counter.items() if count >= threshold]
-    duplicates.sort(key=lambda x: x[1], reverse=reverse)
-    return duplicates
-
-
-def read_csv_rows(csv_path: Path | str, encoding: str = "utf-8") -> list[Row]:
-    """Read a CSV file into a list of row dictionaries."""
-    path = Path(csv_path)
-    with path.open("r", encoding=encoding, newline="") as fp:
-        reader = csv.DictReader(fp)
-        return list(reader)
-
-
-def write_csv_rows(
-    csv_path: Path | str,
-    rows: Sequence[Mapping[str, object]],
-    *,
-    fieldnames: Sequence[str],
-    encoding: str = "utf-8",
-) -> None:
-    """Write row dictionaries to a CSV file."""
-    path = Path(csv_path)
-    with path.open("w", encoding=encoding, newline="") as fp:
-        writer = csv.DictWriter(fp, fieldnames=fieldnames)
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(row)
 
 
 def _normalize_cell(value: object) -> str:

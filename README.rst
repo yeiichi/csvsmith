@@ -185,7 +185,7 @@ CSV File Classification (Python)
 
 .. code-block:: python
 
-   from csvsmith.classify import CSVClassifier
+   from csvsmith.tools.classify import CSVClassifier
 
    classifier = CSVClassifier(
        source_dir="./raw_data",

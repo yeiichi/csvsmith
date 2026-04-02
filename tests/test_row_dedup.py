@@ -1,8 +1,12 @@
-from csvsmith.row_dedup import (
-    count_duplicates_sorted,
+from csvsmith.tools.row_dedup import (
     add_row_digest,
     find_duplicate_rows,
     dedupe_with_report,
+)
+from csvsmith.utils.io import (
+    count_duplicates_sorted,
+    read_csv_rows,
+    write_csv_rows,
 )
 
 

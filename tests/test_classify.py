@@ -1,5 +1,5 @@
 import pytest
-from csvsmith.classify import CSVClassifier
+from csvsmith.tools.classify import CSVClassifier
 
 
 @pytest.fixture

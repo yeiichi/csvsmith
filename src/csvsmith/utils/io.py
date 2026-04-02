@@ -3,11 +3,26 @@ from __future__ import annotations
 import csv
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterable, Iterator
+from typing import Hashable, Iterable, Iterator, Mapping, Sequence
 
 from openpyxl import load_workbook
 from openpyxl.workbook.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
+
+Row = dict[str, str]
+
+from collections import Counter
+
+def count_duplicates_sorted(
+    items: Iterable[Hashable],
+    threshold: int = 2,
+    reverse: bool = True,
+) -> list[tuple[Hashable, int]]:
+    """Count items and return those occurring at least `threshold` times."""
+    counter = Counter(items)
+    duplicates = [(key, count) for key, count in counter.items() if count >= threshold]
+    duplicates.sort(key=lambda x: x[1], reverse=reverse)
+    return duplicates
 
 
 @contextmanager
@@ -37,22 +52,25 @@ def write_worksheet_to_csv(worksheet: Worksheet, csv_path: str | Path) -> None:
         writer.writerows(iter_worksheet_rows(worksheet))
 
 
-def _resolve_csv_path(excel_path: Path, csv_path: str | Path | None) -> Path:
-    """Return the output CSV path, defaulting to the Excel file's stem."""
-    return Path(csv_path) if csv_path else excel_path.with_suffix(".csv")
+def read_csv_rows(csv_path: Path | str, encoding: str = "utf-8") -> list[Row]:
+    """Read a CSV file into a list of row dictionaries."""
+    path = Path(csv_path)
+    with path.open("r", encoding=encoding, newline="") as fp:
+        reader = csv.DictReader(fp)
+        return list(reader)
 
 
-def excel_to_csv(
-    excel_path: str | Path,
-    csv_path: str | Path | None = None,
+def write_csv_rows(
+    csv_path: Path | str,
+    rows: Sequence[Mapping[str, object]],
     *,
-    sheet_name: str | None = None,
-) -> Path:
-    """Convert one Excel worksheet into a CSV file."""
-    excel_path = Path(excel_path)
-    csv_path = _resolve_csv_path(excel_path, csv_path)
-
-    with _open_worksheet(excel_path, sheet_name=sheet_name) as worksheet:
-        write_worksheet_to_csv(worksheet, csv_path)
-
-    return csv_path
+    fieldnames: Sequence[str],
+    encoding: str = "utf-8",
+) -> None:
+    """Write row dictionaries to a CSV file."""
+    path = Path(csv_path)
+    with path.open("w", encoding=encoding, newline="") as fp:
+        writer = csv.DictWriter(fp, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
