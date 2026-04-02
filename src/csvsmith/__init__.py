@@ -31,25 +31,25 @@ Submodules:
 - csvsmith.cli (CLI entrypoint)
 """
 
-__version__ = "0.7.0"
+__version__ = "0.7.1"
 
-from .utils.clean_numeric import clean_numeric
+from .tools.classify import CSVClassifier
+from .tools.excel2csv import excel_to_csv
+from .tools.filter_rows import DropRowsBySubstring
+from .tools.find_matches_in_csv import find_matches_in_csv
+from .tools.move_files import move_by_suffix
 from .tools.row_dedup import (
     add_row_digest,
     find_duplicate_rows,
     dedupe_with_report,
 )
+from .utils.clean_numeric import clean_numeric
+from .utils.distance import StringDistance, Relation, Result, analyze_pair
 from .utils.io import (
     count_duplicates_sorted,
     read_csv_rows,
     write_csv_rows,
 )
-from .tools.classify import CSVClassifier
-from .tools.filter_rows import DropRowsBySubstring, CSVCleaner
-from .tools.excel2csv import excel_to_csv
-from .tools.move_files import move_by_suffix
-from .tools.find_matches_in_csv import find_matches_in_csv
-from .utils.distance import StringDistance, Relation, Result, analyze_pair
 
 __all__ = [
     "count_duplicates_sorted",

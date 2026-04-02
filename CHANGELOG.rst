@@ -1,3 +1,19 @@
+v0.7.1
+======
+
+Released: 2026-04-03
+
+CSVSmith v0.7.1 exposes ``find_matches_in_csv`` at the top-level package API
+and refreshes the README to document the existing CLI and Python usage.
+
+Changed
+-------
+
+- Exposed ``find_matches_in_csv`` as a top-level package API.
+- Documented the existing ``find-matches`` CLI subcommand in the README.
+- Refreshed the README with badges and updated usage examples.
+- Bumped the package version to ``0.7.1``.
+
 v0.7.0
 ======
 
