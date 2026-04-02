@@ -11,28 +11,14 @@ from .tools.classify import CSVClassifier
 from .tools.excel2csv import excel_to_csv
 from .tools.clean_numeric import clean_numeric
 from .tools.filter_rows import DropRowsBySubstring
-from .tools.move_files import move_by_suffix
+from .tools.move_files import move_by_suffix, normalize_suffixes
 from .tools.row_dedup import (
     dedupe_with_report,
     find_duplicate_rows,
 )
+from .tools.find_matches_in_csv import find_matches_in_csv
 from .utils.distance import analyze_pair
 from .utils.io import read_csv_rows, write_csv_rows
-
-
-def _parse_suffixes(value: str | None) -> set[str]:
-    if not value:
-        return {".csv", ".pdf"}
-
-    suffixes: set[str] = set()
-    for item in value.split(","):
-        suffix = item.strip().lower()
-        if not suffix:
-            continue
-        if not suffix.startswith("."):
-            suffix = f".{suffix}"
-        suffixes.add(suffix)
-    return suffixes
 
 
 def cmd_row_duplicates(args: argparse.Namespace) -> int:
@@ -88,7 +74,7 @@ def cmd_classify(args: argparse.Namespace) -> int:
 
 
 def cmd_move_files(args: argparse.Namespace) -> int:
-    suffixes = _parse_suffixes(args.suffixes)
+    suffixes = normalize_suffixes(args.suffixes.split(",") if args.suffixes else [])
     moved_count = move_by_suffix(args.source, args.dest, suffixes=suffixes)
     print(f"Moved {moved_count} file(s).")
     return 0
@@ -161,6 +147,32 @@ def cmd_clean_numeric(args: argparse.Namespace) -> int:
         print(f"Error: {e}", file=sys.stderr)
         return 1
     return 0
+
+
+def cmd_find_matches(args: argparse.Namespace) -> int:
+    results = find_matches_in_csv(
+        args.input,
+        args.target,
+        ignore_case=args.ignore_case,
+        ignore_whitespace=args.ignore_whitespace,
+        nfkc=not args.no_nfkc,
+    )
+
+    if not results:
+        print("No matches found.")
+    else:
+        print(json.dumps(results, indent=2))
+    return 0
+
+
+def _add_find_matches_parser(subparsers) -> None:
+    parser = subparsers.add_parser("find-matches", help="Find matches in a CSV file.")
+    parser.add_argument("input", help="Input CSV file.")
+    parser.add_argument("target", help="Target string to find.")
+    parser.add_argument("--ignore-case", action="store_true", help="Ignore case.")
+    parser.add_argument("--ignore-whitespace", action="store_true", help="Ignore whitespace.")
+    parser.add_argument("--no-nfkc", action="store_true", help="Disable NFKC normalization.")
+    parser.set_defaults(func=cmd_find_matches)
 
 
 def _add_row_duplicates_parser(subparsers) -> None:
@@ -273,6 +285,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     _add_row_duplicates_parser(subparsers)
+    _add_find_matches_parser(subparsers)
     _add_dedupe_parser(subparsers)
     _add_classify_parser(subparsers)
     _add_move_files_parser(subparsers)
@@ -297,3 +310,4 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+

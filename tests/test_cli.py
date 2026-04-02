@@ -157,3 +157,24 @@ def test_cli_parses_string_distance_command():
     assert args.string_a == "a"
     assert args.string_b == "b"
     assert args.ignore_case is True
+
+
+def test_cli_parses_find_matches_command():
+    parser = build_parser()
+    args = parser.parse_args(
+        [
+            "find-matches",
+            "input.csv",
+            "target",
+            "--ignore-case",
+            "--ignore-whitespace",
+            "--no-nfkc",
+        ]
+    )
+
+    assert args.command == "find-matches"
+    assert args.input == "input.csv"
+    assert args.target == "target"
+    assert args.ignore_case is True
+    assert args.ignore_whitespace is True
+    assert args.no_nfkc is True

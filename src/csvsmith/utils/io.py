@@ -3,13 +3,13 @@ from __future__ import annotations
 import csv
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Hashable, Iterable, Iterator, Mapping, Sequence
+from typing import Any, Hashable, Iterable, Iterator, Mapping, Sequence
 
 from openpyxl import load_workbook
 from openpyxl.workbook.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
-Row = dict[str, str]
+Row = dict[str, Any]
 
 from collections import Counter
 
@@ -52,7 +52,7 @@ def write_worksheet_to_csv(worksheet: Worksheet, csv_path: str | Path) -> None:
         writer.writerows(iter_worksheet_rows(worksheet))
 
 
-def read_csv_rows(csv_path: Path | str, encoding: str = "utf-8") -> list[Row]:
+def read_csv_rows(csv_path: Path | str, encoding: str = "utf-8-sig") -> list[Row]:
     """Read a CSV file into a list of row dictionaries."""
     path = Path(csv_path)
     with path.open("r", encoding=encoding, newline="") as fp:
@@ -65,7 +65,7 @@ def write_csv_rows(
     rows: Sequence[Mapping[str, object]],
     *,
     fieldnames: Sequence[str],
-    encoding: str = "utf-8",
+    encoding: str = "utf-8-sig",
 ) -> None:
     """Write row dictionaries to a CSV file."""
     path = Path(csv_path)

@@ -6,12 +6,11 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Hashable, Iterable, Mapping, Optional, Sequence
 
-from ..utils.io import read_csv_rows, write_csv_rows
+from ..utils.io import Row, read_csv_rows, write_csv_rows
 
 KEEP_OPTIONS = {"first", "last"}
 ROW_SEP = "\x1f"
 
-Row = dict[str, str]
 RowLike = Mapping[str, object]
 
 
@@ -141,7 +140,7 @@ def dedupe_csv_file(
     subset: Optional[Sequence[Hashable]] = None,
     exclude: Optional[Sequence[Hashable]] = None,
     keep: str = "first",
-    encoding: str = "utf-8",
+    encoding: str = "utf-8-sig",
 ) -> list[dict[str, object]]:
     """Deduplicate a CSV file, write the result, and return the report."""
     rows = read_csv_rows(src, encoding=encoding)
