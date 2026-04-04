@@ -31,7 +31,7 @@ Submodules:
 - csvsmith.cli (CLI entrypoint)
 """
 
-__version__ = "0.7.2"
+__version__ = "0.7.3"
 
 from .tools.classify import CSVClassifier
 from .tools.excel2csv import excel_to_csv
