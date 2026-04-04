@@ -9,7 +9,7 @@ from typing import Optional, Sequence
 from . import __version__
 from .tools.classify import CSVClassifier
 from .tools.excel2csv import excel_to_csv
-from .utils.clean_numeric import clean_numeric
+from .utils.clean_numeric import clean_currency_numeric, clean_numeric
 from .tools.filter_rows import DropRowsBySubstring
 from .tools.move_files import move_by_suffix, normalize_suffixes
 from .tools.row_dedup import (
@@ -149,6 +149,21 @@ def cmd_clean_numeric(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_clean_currency_numeric(args: argparse.Namespace) -> int:
+    try:
+        cleaned = clean_currency_numeric(
+            args.value,
+            sep=args.sep,
+            decimal=args.decimal,
+            relaxed=args.relaxed,
+        )
+        print(cleaned)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+    return 0
+
+
 def cmd_find_matches(args: argparse.Namespace) -> int:
     results = find_matches_in_csv(
         args.input,
@@ -272,6 +287,22 @@ def _add_clean_numeric_parser(subparsers) -> None:
     parser.set_defaults(func=cmd_clean_numeric)
 
 
+def _add_clean_currency_numeric_parser(subparsers) -> None:
+    parser = subparsers.add_parser(
+        "clean-currency-numeric",
+        help="Clean and convert a currency-prefixed numeric string to float.",
+    )
+    parser.add_argument("value", help="Numeric value to clean.")
+    parser.add_argument("--sep", default=",", help="Group separator (default: ,).")
+    parser.add_argument("--decimal", default=".", help="Decimal separator (default: .).")
+    parser.add_argument(
+        "--relaxed",
+        action="store_true",
+        help="Return the original input when it is not numeric.",
+    )
+    parser.set_defaults(func=cmd_clean_currency_numeric)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="csvsmith",
@@ -293,6 +324,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_drop_rows_parser(subparsers)
     _add_string_distance_parser(subparsers)
     _add_clean_numeric_parser(subparsers)
+    _add_clean_currency_numeric_parser(subparsers)
 
     return parser
 

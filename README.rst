@@ -68,17 +68,11 @@ You can use the library from Python:
 
 .. code-block:: python
 
-   from csvsmith import (
-       clean_numeric,
-       dedupe_with_report,
-       excel_to_csv,
-       find_matches_in_csv,
-       move_by_suffix,
-   )
+   from csvsmith.utils.clean_numeric import clean_currency_numeric
 
-   print(clean_numeric("1,234.56"))
+   print(clean_currency_numeric("$1,234.56"))
 
-Or use the command-line interface:
+For command-line usage, use single quotes around values containing ``$``:
 
 .. code-block:: console
 
@@ -94,6 +88,17 @@ Clean numeric values:
 .. code-block:: console
 
    csvsmith clean-numeric "1,234.56" --sep "," --decimal "."
+
+Clean currency-prefixed numeric values:
+
+.. code-block:: console
+
+   csvsmith clean-currency-numeric '$1,234.56' --sep "," --decimal "."
+
+.. note::
+
+   Use single quotes for values containing ``$``. Double quotes may trigger
+   shell expansion and change the input unexpectedly.
 
 Filter rows in a CSV:
 

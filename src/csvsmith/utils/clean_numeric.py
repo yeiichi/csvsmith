@@ -4,6 +4,18 @@ from typing import Any
 NON_BREAKING_SPACE = "\xa0"
 SEPARATOR_PATTERN = re.compile(r"[ _\xa0]")
 NUMBER_PATTERN = re.compile(r"^-?(?:\d+|\d*\.\d+)$")
+INVALID_NUMBER_MESSAGE = "Could not convert {value!r} to a valid number."
+CURRENCY_PREFIX_PATTERN = re.compile(r"^[\$€£¥]")
+
+
+def strip_currency_prefix(value: Any) -> Any:
+    """
+    Remove a single common currency symbol from the start of a value.
+    """
+    text = str(value).strip()
+    if text and CURRENCY_PREFIX_PATTERN.match(text):
+        return text[1:].strip()
+    return value
 
 
 def _normalize_numeric_text(value: Any, *, sep: str, decimal: str) -> str:
@@ -13,17 +25,6 @@ def _normalize_numeric_text(value: Any, *, sep: str, decimal: str) -> str:
     Converts a given value to a string representation and ensures normalization of numeric formatting,
     such as removing group separators, converting localized decimal separators, and handling negative
     values enclosed in parentheses.
-
-    :param value: The value to be normalized, which may be of any type.
-    :type value: Any
-    :param sep: The character used as a group separator in the input value, which will be removed
-        during normalization.
-    :type sep: str
-    :param decimal: The character used as the decimal separator in the input value, which will
-        be replaced with a standard period ('.') during normalization.
-    :type decimal: str
-    :return: A normalized numeric string with consistent formatting.
-    :rtype: str
     """
     numeric_text = str(value).strip()
 
@@ -42,17 +43,6 @@ def _normalize_numeric_text(value: Any, *, sep: str, decimal: str) -> str:
 def _has_valid_grouping(numeric_text: str, *, decimal: str) -> bool:
     """
     Checks whether a numeric text string has valid grouping based on a specified decimal character.
-
-    This function validates the structure of the given numeric text to determine if it adheres to allowed
-    grouping conventions. It ensures the string does not contain invalid or misplaced group separators,
-    decimal points, or spacing characters.
-
-    :param numeric_text: A string representing the numeric text to be validated.
-    :type numeric_text: str
-    :param decimal: A string representing the character used as the decimal point.
-    :type decimal: str
-    :return: True if the numeric text satisfies the grouping rules; otherwise, False.
-    :rtype: bool
     """
     if not numeric_text:
         return False
@@ -83,42 +73,52 @@ def _has_valid_grouping(numeric_text: str, *, decimal: str) -> bool:
     return bool(NUMBER_PATTERN.fullmatch(stripped_text))
 
 
+def _strip_group_separators(numeric_text: str) -> str:
+    return SEPARATOR_PATTERN.sub("", numeric_text)
+
+
+def _invalid_number_error(value: Any) -> ValueError:
+    return ValueError(INVALID_NUMBER_MESSAGE.format(value=value))
+
+
 def clean_numeric(
-    value: Any, *, sep: str = ",", decimal: str = ".", relaxed: bool = False
+        value: Any, *, sep: str = ",", decimal: str = ".", relaxed: bool = False
 ) -> float | Any:
     """
     Cleans and converts a given input to a float by normalizing its numeric representation.
-    Handles separators and decimal points based on the provided arguments. If the input
-    value is invalid or cannot be converted, a ValueError is raised unless relaxed mode
-    is enabled.
-
-    :param value: The input value to be cleaned and converted.
-    :type value: Any
-    :param sep: The character used as a thousands separator in the input value. Default is ",".
-    :type sep: str
-    :param decimal: The character used as a decimal point in the input value. Default is ".".
-    :type decimal: str
-    :param relaxed: If True, return the original input when it is not numeric.
-    :type relaxed: bool
-    :return: The cleaned and converted numeric value as a float, or the original value in relaxed mode.
-    :rtype: float | Any
-    :raises ValueError: If the input value cannot be converted to a valid number and relaxed is False.
     """
     if value is None:
         return 0.0
 
-    normalized_number_text = _normalize_numeric_text(value, sep=sep, decimal=decimal)
+    normalized_text = _normalize_numeric_text(value, sep=sep, decimal=decimal)
 
-    if not _has_valid_grouping(normalized_number_text, decimal=decimal):
+    if not _has_valid_grouping(normalized_text, decimal=decimal):
         if relaxed:
             return value
-        raise ValueError(f"Could not convert {value!r} to a valid number.")
+        raise _invalid_number_error(value)
 
-    numeric_text = SEPARATOR_PATTERN.sub("", normalized_number_text)
+    candidate_text = _strip_group_separators(normalized_text)
 
     try:
-        return float(numeric_text)
+        return float(candidate_text)
     except ValueError as exc:
         if relaxed:
             return value
-        raise ValueError(f"Could not convert {value!r} to a valid number.") from exc
+        raise _invalid_number_error(value) from exc
+
+
+def clean_currency_numeric(
+        value: Any, *, sep: str = ",", decimal: str = ".", relaxed: bool = False
+) -> float | Any:
+    """
+    Cleans and converts a currency-prefixed numeric string to a float.
+    """
+    if value is None:
+        return 0.0
+
+    return clean_numeric(
+        strip_currency_prefix(value),
+        sep=sep,
+        decimal=decimal,
+        relaxed=relaxed,
+    )

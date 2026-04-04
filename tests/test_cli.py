@@ -138,11 +138,21 @@ def test_cli_parses_clean_numeric_command():
     assert args.decimal == "."
 
 
-def test_cli_parses_clean_numeric_command_with_relaxed_mode():
+def test_cli_parses_clean_currency_numeric_command():
     parser = build_parser()
     args = parser.parse_args(
-        ["clean-numeric", "not-a-number", "--relaxed"]
+        ["clean-currency-numeric", "$1,234.56", "--sep", ",", "--decimal", "."]
     )
+
+    assert args.command == "clean-currency-numeric"
+    assert args.value == "$1,234.56"
+    assert args.sep == ","
+    assert args.decimal == "."
+
+
+def test_cli_parses_clean_numeric_command_with_relaxed_mode():
+    parser = build_parser()
+    args = parser.parse_args(["clean-numeric", "not-a-number", "--relaxed"])
 
     assert args.command == "clean-numeric"
     assert args.value == "not-a-number"

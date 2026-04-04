@@ -20,6 +20,7 @@ Data transformation
 ^^^^^^^^^^^^^^^^^^^
 
 - ``clean-numeric`` — Normalize numeric values in text fields
+- ``clean-currency-numeric`` — Normalize currency-prefixed numeric values
 - ``dedupe`` — Remove duplicate rows
 - ``drop-rows`` — Filter rows based on conditions
 
@@ -59,6 +60,17 @@ Clean numeric fields:
 .. code-block:: bash
 
    csvsmith clean-numeric data.csv -c amount -o normalized.csv
+
+Clean currency-prefixed numeric fields:
+
+.. code-block:: bash
+
+   csvsmith clean-currency-numeric '$1,234.56'
+
+.. note::
+
+   In Python, normal string quoting is fine. In the shell, values containing
+   ``$`` should usually be single-quoted to avoid expansion.
 
 ---
 

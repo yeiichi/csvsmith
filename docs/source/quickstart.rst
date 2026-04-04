@@ -22,7 +22,7 @@ Welcome to `csvsmith`! This guide will help you get started with the most common
 
 .. code-block:: bash
 
-   csvsmith clean-numeric "¥3,000" --sep ","
+   csvsmith clean-numeric "3,000" --sep ","
 
 4. Find a specific value in a CSV
 ---------------------------------

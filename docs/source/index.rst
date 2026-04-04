@@ -13,6 +13,7 @@ Example
 
    csvsmith excel-to-csv input.xlsx -o output.csv
    csvsmith dedupe data.csv -o clean.csv
+   csvsmith clean-currency-numeric '$1,234.56'
 
 Getting started
 ---------------
