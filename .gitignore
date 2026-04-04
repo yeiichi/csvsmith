@@ -55,4 +55,4 @@ pytest_cache/
 *.whl
 
 # Sphinx documentation artifacts
-docs/build
+docs/build/

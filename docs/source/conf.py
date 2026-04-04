@@ -1,9 +1,10 @@
-# Minimal Sphinx configuration file
+# docs/source/conf.py
 import sys
 from pathlib import Path
 
-# Add src/ to PYTHONPATH
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
+ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "src"
+sys.path.insert(0, str(SRC))
 
 project = "csvsmith"
 author = "Eiichi YAMAMOTO"
@@ -12,8 +13,8 @@ copyright = "2026, Eiichi YAMAMOTO"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    "sphinx.ext.napoleon",   # for Google/NumPy docstrings
-    "sphinx.ext.viewcode",   # adds source links
+    "sphinx.ext.napoleon",
+    "sphinx.ext.viewcode",
 ]
 
 autodoc_default_options = {
