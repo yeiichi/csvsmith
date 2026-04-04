@@ -1,3 +1,2 @@
 # docs/requirements.txt
 sphinx>=8,<9
-furo>=2024.8.6
