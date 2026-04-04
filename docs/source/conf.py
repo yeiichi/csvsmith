@@ -26,7 +26,11 @@ autodoc_default_options = {
 templates_path = ["_templates"]
 exclude_patterns = ["_build"]
 
-html_theme = "alabaster"
+html_theme = "furo"
 html_static_path = ["_static"]
+
+html_theme_options = {
+    "sidebar_hide_name": False,
+}
 
 autosummary_generate = True

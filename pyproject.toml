@@ -35,6 +35,12 @@ dependencies = [
   "openpyxl>=3.1",
 ]
 
+[project.optional-dependencies]
+docs = [
+  "sphinx>=8,<9",
+  "furo>=2024.8.6",
+]
+
 [project.urls]
 Homepage = "https://github.com/yeiichi/csvsmith"
 Repository = "https://github.com/yeiichi/csvsmith"
