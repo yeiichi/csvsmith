@@ -5,7 +5,7 @@ NON_BREAKING_SPACE = "\xa0"
 SEPARATOR_PATTERN = re.compile(r"[ _\xa0]")
 NUMBER_PATTERN = re.compile(r"^-?(?:\d+|\d*\.\d+)$")
 INVALID_NUMBER_MESSAGE = "Could not convert {value!r} to a valid number."
-CURRENCY_PREFIX_PATTERN = re.compile(r"^[\$€£¥]")
+CURRENCY_PREFIX_PATTERN = re.compile(r"^[\$€£¥₹]")
 
 
 def strip_currency_prefix(value: Any) -> Any:
