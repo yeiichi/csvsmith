@@ -13,12 +13,23 @@ csvsmith
    :target: https://opensource.org/licenses/
    :alt: License
 
+.. image:: https://img.shields.io/badge/docs-Read%20the%20Docs-blue.svg
+   :target: https://csvsmith.readthedocs.io/en/latest/
+   :alt: Documentation
+
 Small, focused CSV utilities for common data wrangling tasks.
 
 ``csvsmith`` provides a handful of practical tools for working with CSV
 files, including cleaning numeric values, filtering rows, deduplicating
 records, classifying files, converting Excel spreadsheets to CSV, moving
 files by suffix, and finding matches inside CSV content.
+
+Documentation
+-------------
+
+Read the full documentation at:
+
+https://csvsmith.readthedocs.io/en/latest/
 
 Features
 --------

@@ -38,6 +38,7 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/yeiichi/csvsmith"
 Repository = "https://github.com/yeiichi/csvsmith"
+Documentation = "https://csvsmith.readthedocs.io/en/latest/"
 
 [project.scripts]
 csvsmith = "csvsmith.cli:main"
