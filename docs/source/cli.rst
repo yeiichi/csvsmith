@@ -27,7 +27,7 @@ Data transformation
 File operations
 ^^^^^^^^^^^^^^^
 
-- ``excel2csv`` — Convert Excel files to CSV
+- ``excel-to-csv`` — Convert Excel files to CSV
 - ``move-files`` — Move or organize files based on rules
 
 Analysis
@@ -47,7 +47,7 @@ Convert Excel to CSV:
 
 .. code-block:: bash
 
-   csvsmith excel2csv input.xlsx -o out/
+   csvsmith excel-to-csv input.xlsx -o output.csv
 
 Remove duplicates:
 
@@ -59,7 +59,7 @@ Clean numeric fields:
 
 .. code-block:: bash
 
-   csvsmith clean-numeric data.csv -c amount -o normalized.csv
+   csvsmith clean-numeric "1,200.50" --sep "," --decimal "."
 
 Clean currency-prefixed numeric fields:
 
@@ -68,9 +68,9 @@ Clean currency-prefixed numeric fields:
    csvsmith clean-currency-numeric '$1,234.56'
 
 .. note::
-
-   In Python, normal string quoting is fine. In the shell, values containing
-   ``$`` should usually be single-quoted to avoid expansion.
+   When using values starting with ``$`` (e.g., ``"$1234.56"``) in the shell, 
+   be aware that the shell might attempt to expand it as a variable. 
+   Always use single quotes (``'$1234.56'``) to prevent unexpected expansion.
 
 ---
 
