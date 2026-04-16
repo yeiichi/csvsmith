@@ -56,3 +56,6 @@ pytest_cache/
 
 # Sphinx documentation artifacts
 docs/build/
+
+# Misc
+scripts/

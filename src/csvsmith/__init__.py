@@ -16,6 +16,8 @@ Public API:
 - Relation
 - Result
 - analyze_pair
+- strict_concat_rows
+- save_csv
 
 Compatibility aliases:
 - CSVCleaner
@@ -28,10 +30,11 @@ Submodules:
 - csvsmith.filter_rows
 - csvsmith.excel2csv
 - csvsmith.move_files
+- csvsmith.strict_concat
 - csvsmith.cli (CLI entrypoint)
 """
 
-__version__ = "0.7.3"
+__version__ = "0.8.0"
 
 from .tools.classify import CSVClassifier
 from .tools.excel2csv import excel_to_csv
@@ -43,6 +46,7 @@ from .tools.row_dedup import (
     find_duplicate_rows,
     dedupe_with_report,
 )
+from .tools.strict_concat import save_csv, strict_concat_rows
 from .utils.clean_numeric import clean_numeric
 from .utils.distance import StringDistance, Relation, Result, analyze_pair
 from .utils.io import (
@@ -68,4 +72,6 @@ __all__ = [
     "Result",
     "analyze_pair",
     "clean_numeric",
+    "strict_concat_rows",
+    "save_csv",
 ]

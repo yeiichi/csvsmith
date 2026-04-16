@@ -39,6 +39,7 @@ Tools
    tools/excel2csv
    tools/find-matches
    tools/move-files
+   tools/strict-concat
    tools/string-distance
 
 Python API

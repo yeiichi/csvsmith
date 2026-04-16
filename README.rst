@@ -41,6 +41,7 @@ Features
 - Convert Excel workbooks to CSV
 - Move files by suffix
 - Find matching values inside CSV files
+- Concatenate CSV files with identical headers
 - Use the tools either from Python or from the command line
 
 Installation
@@ -136,6 +137,12 @@ Find matches in a CSV:
 
    csvsmith find-matches input.csv target --ignore-case --ignore-whitespace
 
+Concatenate CSV files:
+
+.. code-block:: console
+
+   csvsmith strict-concat file1.csv file2.csv -o combined.csv
+
 Find matches in a CSV
 ---------------------
 
@@ -195,7 +202,7 @@ File and conversion helpers:
 
 .. code-block:: python
 
-   from csvsmith import excel_to_csv, move_by_suffix
+   from csvsmith import excel_to_csv, move_by_suffix, strict_concat_rows, save_csv
 
 String comparison utilities:
 

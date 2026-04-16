@@ -16,6 +16,7 @@ from .tools.row_dedup import (
     dedupe_with_report,
     find_duplicate_rows,
 )
+from .tools.strict_concat import save_csv, strict_concat_rows
 from .tools.find_matches_in_csv import find_matches_in_csv
 from .utils.distance import analyze_pair
 from .utils.io import read_csv_rows, write_csv_rows
@@ -180,6 +181,23 @@ def cmd_find_matches(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_strict_concat(args: argparse.Namespace) -> int:
+    input_dir = Path(args.input_dir)
+    if not input_dir.is_dir():
+        print(f"Error: input directory not found: {input_dir}", file=sys.stderr)
+        return 1
+
+    try:
+        rows = strict_concat_rows(input_dir)
+        save_csv(rows, args.output)
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    print(f"Wrote concatenated CSV to: {args.output}")
+    return 0
+
+
 def _add_find_matches_parser(subparsers) -> None:
     parser = subparsers.add_parser("find-matches", help="Find matches in a CSV file.")
     parser.add_argument("input", help="Input CSV file.")
@@ -188,6 +206,16 @@ def _add_find_matches_parser(subparsers) -> None:
     parser.add_argument("--ignore-whitespace", action="store_true", help="Ignore whitespace.")
     parser.add_argument("--no-nfkc", action="store_true", help="Disable NFKC normalization.")
     parser.set_defaults(func=cmd_find_matches)
+
+
+def _add_strict_concat_parser(subparsers) -> None:
+    parser = subparsers.add_parser(
+        "strict-concat",
+        help="Concatenate CSVs in a directory only when all headers match exactly.",
+    )
+    parser.add_argument("input_dir", help="Directory containing CSV files to concatenate.")
+    parser.add_argument("-o", "--output", required=True, help="Output CSV file path.")
+    parser.set_defaults(func=cmd_strict_concat)
 
 
 def _add_row_duplicates_parser(subparsers) -> None:
@@ -317,6 +345,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     _add_row_duplicates_parser(subparsers)
     _add_find_matches_parser(subparsers)
+    _add_strict_concat_parser(subparsers)
     _add_dedupe_parser(subparsers)
     _add_classify_parser(subparsers)
     _add_move_files_parser(subparsers)

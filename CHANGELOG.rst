@@ -1,3 +1,27 @@
+v0.8.0
+======
+
+Released: 2026-04-16
+
+CSVSmith v0.8.0 adds the ``strict-concat`` tool and API for concatenating CSV
+files with identical headers. This release also includes documentation
+and CLI support for the new feature.
+
+Added
+-----
+
+- Added ``strict_concat_rows`` and ``save_csv`` to the ``csvsmith.tools.strict_concat`` module.
+- Exposed ``strict_concat_rows`` and ``save_csv`` at the top-level package API.
+- Added the ``strict-concat`` CLI subcommand.
+- Bumped the package version to ``0.8.0``.
+
+v0.7.3
+======
+
+Released: 2026-04-10
+
+- Minor bug fixes and internal improvements.
+
 v0.7.1
 ======
 

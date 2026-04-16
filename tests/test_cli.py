@@ -188,3 +188,12 @@ def test_cli_parses_find_matches_command():
     assert args.ignore_case is True
     assert args.ignore_whitespace is True
     assert args.no_nfkc is True
+
+
+def test_cli_parses_strict_concat_command():
+    parser = build_parser()
+    args = parser.parse_args(["strict-concat", "input_dir", "-o", "output.csv"])
+
+    assert args.command == "strict-concat"
+    assert args.input_dir == "input_dir"
+    assert args.output == "output.csv"

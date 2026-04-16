@@ -29,6 +29,7 @@ File operations
 
 - ``excel-to-csv`` — Convert Excel files to CSV
 - ``move-files`` — Move or organize files based on rules
+- ``strict-concat`` — Concatenate CSV files with identical headers
 
 Analysis
 ^^^^^^^^
