@@ -1,64 +1,73 @@
 Recipes
 =======
 
-This section demonstrates how to combine multiple `csvsmith` tools for common data-cleaning and organization workflows.
+These examples combine a few csvsmith tools into practical workflows. For
+individual command options, follow the linked tool pages.
 
-Cleaning and Deduplicating Excel Data
--------------------------------------
+Convert and deduplicate a worksheet
+-----------------------------------
 
-A common workflow: convert an Excel file to CSV, normalize its numeric columns, and then remove duplicate records.
+Convert one Excel worksheet, inspect duplicate groups, and then write a clean
+CSV:
 
-**Shell Command Workflow:**
+.. code-block:: console
 
-.. code-block:: bash
+   csvsmith excel-to-csv source.xlsx -o source.csv --sheet-name "Data"
+   csvsmith row-duplicates source.csv --subset customer_id,date
+   csvsmith dedupe source.csv -o clean.csv \
+       --subset customer_id,date --report duplicates.json
 
-   # 1. Convert Excel to CSV
-   csvsmith excel-to-csv data.xlsx -o raw_data.csv
+See :doc:`tools/excel2csv` and :doc:`tools/dedupe`.
 
-   # 2. Clean numeric values (e.g., currency fields in "amount" column)
-   csvsmith clean-numeric raw_data.csv --sep "," -o numeric_data.csv
+Clean a CSV column with the Python API
+--------------------------------------
 
-   # 3. Remove duplicate records considering all columns
-   csvsmith dedupe numeric_data.csv -o final_clean.csv --keep first --report report.json
-
-**Python API Integration:**
+The numeric CLI commands process individual values. For a whole column, use
+the Python API:
 
 .. code-block:: python
 
-   from csvsmith.tools.excel2csv import excel_to_csv
-   from csvsmith.utils.io import read_csv_rows, write_csv_rows
-   from csvsmith.utils.clean_numeric import clean_numeric
-   from csvsmith.tools.row_dedup import dedupe_with_report
+   from csvsmith import read_csv_rows, write_csv_rows
+   from csvsmith.utils.clean_numeric import clean_currency_numeric
 
-   # 1. Convert
-   csv_path = excel_to_csv("data.xlsx")
-
-   # 2. Load and Clean
-   rows = read_csv_rows(csv_path)
+   rows = read_csv_rows("source.csv")
    for row in rows:
-       row['amount'] = clean_numeric(row['amount'], relaxed=True)
+       row["amount"] = clean_currency_numeric(row["amount"], relaxed=True)
 
-   # 3. Deduplicate
-   deduped, report = dedupe_with_report(rows)
+   fieldnames = list(rows[0]) if rows else []
+   write_csv_rows("clean.csv", rows, fieldnames=fieldnames)
 
-   # 4. Save result
-   write_csv_rows("final_clean.csv", deduped, fieldnames=rows[0].keys())
+``relaxed=True`` preserves values that cannot be parsed. See
+:doc:`tools/clean-numeric` and :doc:`python-api`.
 
-Organizing and Filtering Large Datasets
----------------------------------------
+Combine matching exports
+------------------------
 
-If you have a collection of files, you can automatically categorize them by structure, and then filter out rows based on a specific criteria.
+When several exports have identical headers, concatenate them while retaining
+their source filenames:
 
-**Shell Command Workflow:**
+.. code-block:: console
 
-.. code-block:: bash
+   csvsmith strict-concat daily_exports/ -o combined.csv
+   csvsmith dedupe combined.csv -o combined-clean.csv --exclude file_stem
 
-   # 1. Automatically categorize files into subdirectories based on their headers
-   csvsmith classify raw_incoming/ organized/ --auto
+See :doc:`tools/strict-concat` and :doc:`tools/dedupe`.
 
-   # 2. Process specific categorized files to filter out unwanted rows
-   # For example, filtering files in a "user_logs" category
-   csvsmith drop-rows organized/user_logs/data_1.csv status "internal_test"
+Preview before organizing files
+-------------------------------
 
-   # 3. Archive or move the final CSV files
-   csvsmith move-files organized/user_logs/ processed/ --suffixes csv
+Inspect automatic classification before moving CSV files:
+
+.. code-block:: console
+
+   csvsmith classify incoming/ organized/ --auto --dry-run
+   csvsmith classify incoming/ organized/ --auto
+
+For simple suffix-based moves:
+
+.. code-block:: console
+
+   csvsmith move-files incoming/ processed/ --suffixes csv,pdf
+
+The destination directories should already exist. See :doc:`tools/classify`
+and :doc:`tools/move-files`.

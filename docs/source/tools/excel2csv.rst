@@ -4,7 +4,7 @@ Excel to CSV
 What it does
 ------------
 
-Converts an Excel worksheet (.xlsx or .xls) into a CSV file.
+Converts an Excel ``.xlsx`` worksheet into a CSV file.
 By default, it converts the first worksheet.
 
 Python usage

@@ -13,6 +13,7 @@ Example
 
    csvsmith excel-to-csv input.xlsx -o output.csv
    csvsmith dedupe data.csv -o clean.csv
+   csvsmith concentrate input.csv
    csvsmith clean-currency-numeric '$1,234.56'
 
 Getting started
@@ -34,6 +35,7 @@ Tools
 
    tools/classify
    tools/clean-numeric
+   tools/dense-csv
    tools/dedupe
    tools/drop-rows
    tools/excel2csv

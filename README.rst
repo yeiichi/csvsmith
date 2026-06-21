@@ -42,6 +42,7 @@ Features
 - Move files by suffix
 - Find matching values inside CSV files
 - Concatenate CSV files with identical headers
+- Tokenize repeated CSV values and restore them with a versioned map
 - Use the tools either from Python or from the command line
 
 Installation
@@ -123,7 +124,7 @@ Convert Excel to CSV:
 
 .. code-block:: console
 
-   csvsmith excel2csv input.xlsx
+   csvsmith excel-to-csv input.xlsx
 
 Move files by suffix:
 
@@ -141,7 +142,49 @@ Concatenate CSV files:
 
 .. code-block:: console
 
-   csvsmith strict-concat file1.csv file2.csv -o combined.csv
+   csvsmith strict-concat incoming/ -o combined.csv
+
+Concentrate repeated values and restore them later:
+
+.. code-block:: console
+
+   csvsmith concentrate input.csv
+   csvsmith rehydrate input.dense.csv -m input.dense-map.json -o restored.csv
+
+Dense CSV scope and performance
+-------------------------------
+
+The dense CSV workflow is intended for spreadsheet-oriented and medium-sized
+CSV files, roughly in the 100 MB class. Concentration makes two passes over the
+input and keeps value counts in memory, so memory use depends on the number and
+size of distinct values in the selected columns.
+
+For substantially larger datasets, especially gigabyte-scale pipelines, a
+flat CSV plus a separate JSON map is usually the wrong interchange format.
+Consider a binary columnar format such as Apache Parquet instead.
+
+Dense CSV replaces repeated values with tokens containing a 64-character
+SHA-256 digest. The complete token includes the ``csvsmith:sha256:`` prefix and
+is therefore 79 ASCII characters. The JSON map also stores each original value.
+
+The workflow can still reduce expensive downstream work even when the files
+become larger. A consumer can process each mapped value once, store the result
+against its token, and apply that result to every repeated occurrence during
+rehydration. The CLI reports this potential repeated-operation reduction among
+mapped cells.
+
+For example, 937 mapped cell occurrences backed by 82 unique map values imply
+855 avoidable repeated operations, or about 91.2%. This is a deduplication
+ratio for mapped work, not a file-compression ratio or a guarantee of total
+pipeline savings.
+
+.. warning::
+
+   Concentration does not guarantee a smaller combined output. Replacing short
+   values such as ``True``, ``M``, or ``NY`` with a 79-character token will
+   increase the CSV size. Select columns containing sufficiently long,
+   repeated values and consider both the concentrated CSV and its JSON map
+   when evaluating storage savings.
 
 Find matches in a CSV
 ---------------------
@@ -196,13 +239,20 @@ CSV classification and filtering:
 
 .. code-block:: python
 
-   from csvsmith import CSVClassifier, DropRowsBySubstring, CSVCleaner
+   from csvsmith import CSVClassifier, DropRowsBySubstring
 
 File and conversion helpers:
 
 .. code-block:: python
 
-   from csvsmith import excel_to_csv, move_by_suffix, strict_concat_rows, save_csv
+   from csvsmith import (
+       concentrate_csv,
+       excel_to_csv,
+       move_by_suffix,
+       rehydrate_csv,
+       save_csv,
+       strict_concat_rows,
+   )
 
 String comparison utilities:
 

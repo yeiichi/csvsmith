@@ -18,6 +18,8 @@ Public API:
 - analyze_pair
 - strict_concat_rows
 - save_csv
+- concentrate_csv
+- rehydrate_csv
 
 Compatibility aliases:
 - CSVCleaner
@@ -37,6 +39,12 @@ Submodules:
 __version__ = "0.8.0"
 
 from .tools.classify import CSVClassifier
+from .tools.dense_csv import (
+    ConcentrateResult,
+    RehydrateResult,
+    concentrate_csv,
+    rehydrate_csv,
+)
 from .tools.excel2csv import excel_to_csv
 from .tools.filter_rows import DropRowsBySubstring
 from .tools.find_matches_in_csv import find_matches_in_csv
@@ -74,4 +82,8 @@ __all__ = [
     "clean_numeric",
     "strict_concat_rows",
     "save_csv",
+    "ConcentrateResult",
+    "RehydrateResult",
+    "concentrate_csv",
+    "rehydrate_csv",
 ]

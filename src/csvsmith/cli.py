@@ -8,6 +8,7 @@ from typing import Optional, Sequence
 
 from . import __version__
 from .tools.classify import CSVClassifier
+from .tools.dense_csv import concentrate_csv, rehydrate_csv
 from .tools.excel2csv import excel_to_csv
 from .utils.clean_numeric import clean_currency_numeric, clean_numeric
 from .tools.filter_rows import DropRowsBySubstring
@@ -198,6 +199,70 @@ def cmd_strict_concat(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_concentrate(args: argparse.Namespace) -> int:
+    input_path = Path(args.input)
+    output_path = (
+        Path(args.output)
+        if args.output
+        else input_path.with_name(f"{input_path.stem}.dense.csv")
+    )
+    map_path = (
+        Path(args.map)
+        if args.map
+        else input_path.with_name(f"{input_path.stem}.dense-map.json")
+    )
+    columns = (
+        [column.strip() for column in args.columns.split(",") if column.strip()]
+        if args.columns
+        else None
+    )
+    try:
+        result = concentrate_csv(
+            input_path,
+            output_path,
+            map_path,
+            columns=columns,
+            min_occurrences=args.min_occurrences,
+        )
+    except (OSError, ValueError, csv.Error, json.JSONDecodeError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    print(
+        f"Wrote concentrated CSV to: {result.output_csv_path} "
+        f"({result.transformed_cell_count} cells, "
+        f"{result.mapped_value_count} mapped values)"
+    )
+    if result.transformed_cell_count:
+        avoided_operations = (
+            result.transformed_cell_count - result.mapped_value_count
+        )
+        reduction_percentage = (
+            avoided_operations / result.transformed_cell_count * 100
+        )
+        print(
+            "Potential repeated-operation reduction for mapped values: "
+            f"{avoided_operations}/{result.transformed_cell_count} "
+            f"({reduction_percentage:.1f}%)"
+        )
+    print(f"Wrote dense CSV map to: {result.output_map_path}")
+    return 0
+
+
+def cmd_rehydrate(args: argparse.Namespace) -> int:
+    try:
+        result = rehydrate_csv(args.input, args.map, args.output)
+    except (OSError, ValueError, csv.Error, json.JSONDecodeError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    print(
+        f"Wrote rehydrated CSV to: {result.output_csv_path} "
+        f"({result.restored_cell_count} cells restored)"
+    )
+    return 0
+
+
 def _add_find_matches_parser(subparsers) -> None:
     parser = subparsers.add_parser("find-matches", help="Find matches in a CSV file.")
     parser.add_argument("input", help="Input CSV file.")
@@ -216,6 +281,46 @@ def _add_strict_concat_parser(subparsers) -> None:
     parser.add_argument("input_dir", help="Directory containing CSV files to concatenate.")
     parser.add_argument("-o", "--output", required=True, help="Output CSV file path.")
     parser.set_defaults(func=cmd_strict_concat)
+
+
+def _add_concentrate_parser(subparsers) -> None:
+    parser = subparsers.add_parser(
+        "concentrate",
+        help="Replace repeated CSV values with deterministic tokens.",
+    )
+    parser.add_argument("input", help="Input CSV file.")
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="Output CSV file (default: <input-stem>.dense.csv).",
+    )
+    parser.add_argument(
+        "-m",
+        "--map",
+        help="Output JSON map file (default: <input-stem>.dense-map.json).",
+    )
+    parser.add_argument(
+        "--columns",
+        help="Comma-separated column names to concentrate (default: all columns).",
+    )
+    parser.add_argument(
+        "--min-occurrences",
+        type=int,
+        default=2,
+        help="Minimum repetitions required before replacing a value (default: 2).",
+    )
+    parser.set_defaults(func=cmd_concentrate)
+
+
+def _add_rehydrate_parser(subparsers) -> None:
+    parser = subparsers.add_parser(
+        "rehydrate",
+        help="Restore a concentrated CSV using its JSON map.",
+    )
+    parser.add_argument("input", help="Concentrated CSV file.")
+    parser.add_argument("-m", "--map", required=True, help="Dense CSV JSON map file.")
+    parser.add_argument("-o", "--output", required=True, help="Output CSV file.")
+    parser.set_defaults(func=cmd_rehydrate)
 
 
 def _add_row_duplicates_parser(subparsers) -> None:
@@ -346,6 +451,8 @@ def build_parser() -> argparse.ArgumentParser:
     _add_row_duplicates_parser(subparsers)
     _add_find_matches_parser(subparsers)
     _add_strict_concat_parser(subparsers)
+    _add_concentrate_parser(subparsers)
+    _add_rehydrate_parser(subparsers)
     _add_dedupe_parser(subparsers)
     _add_classify_parser(subparsers)
     _add_move_files_parser(subparsers)
@@ -371,4 +478,3 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

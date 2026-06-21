@@ -22,7 +22,10 @@ Data transformation
 - ``clean-numeric`` — Normalize numeric values in text fields
 - ``clean-currency-numeric`` — Normalize currency-prefixed numeric values
 - ``dedupe`` — Remove duplicate rows
+- ``row-duplicates`` — Print rows that belong to duplicate groups
 - ``drop-rows`` — Filter rows based on conditions
+- ``concentrate`` — Replace repeated values with deterministic tokens
+- ``rehydrate`` — Restore tokenized values using a dense CSV map
 
 File operations
 ^^^^^^^^^^^^^^^
@@ -36,6 +39,7 @@ Analysis
 
 - ``classify`` — Categorize or label data
 - ``find-matches`` — Search for matching records
+- ``string-distance`` — Compare two strings using similarity metrics
 
 See the *Tools* section for detailed usage of each command.
 
@@ -67,6 +71,13 @@ Clean currency-prefixed numeric fields:
 .. code-block:: bash
 
    csvsmith clean-currency-numeric '$1,234.56'
+
+Concentrate and restore repeated CSV values:
+
+.. code-block:: bash
+
+   csvsmith concentrate input.csv
+   csvsmith rehydrate input.dense.csv -m input.dense-map.json -o restored.csv
 
 .. note::
    When using values starting with ``$`` (e.g., ``"$1234.56"``) in the shell, 
@@ -103,11 +114,10 @@ Each subcommand provides its own help message:
 
    csvsmith clean-numeric --help
 
-This will display:
+This displays:
 
 - available options
 - required arguments
-- usage examples
 
 ---
 
@@ -115,4 +125,6 @@ Notes
 -----
 
 - Commands are designed to be composable in scripts and pipelines.
-- Input files are not modified unless explicitly overwritten.
+- Commands that write CSV output use a separate output path or generated
+  suffix. File-organization commands such as ``classify`` and ``move-files``
+  move source files by design.

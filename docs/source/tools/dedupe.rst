@@ -25,6 +25,14 @@ Python usage
 CLI usage
 ---------
 
+Inspect rows that participate in duplicate groups:
+
+.. code-block:: bash
+
+   csvsmith row-duplicates input.csv --subset id,name
+
+Write a deduplicated CSV and an optional JSON report:
+
 .. code-block:: bash
 
    csvsmith dedupe input.csv -o output.csv --subset id,name --keep first --report report.json

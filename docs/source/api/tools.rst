@@ -12,6 +12,9 @@ Submodules
 .. automodule:: csvsmith.tools.classify
    :members:
 
+.. automodule:: csvsmith.tools.dense_csv
+   :members:
+
 .. automodule:: csvsmith.tools.excel2csv
    :members:
 

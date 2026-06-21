@@ -37,10 +37,9 @@ Import from public modules whenever possible.
 
 .. code-block:: python
 
-   # Example: utility-style import
-   from csvsmith.utils.clean_numeric import parse_number
+   from csvsmith import clean_numeric
 
-   value = parse_number("1,234")
+   value = clean_numeric("1,234")
 
 ---
 
@@ -51,10 +50,10 @@ Clean a list of numeric-like values:
 
 .. code-block:: python
 
-   from csvsmith.utils.clean_numeric import parse_number
+   from csvsmith import clean_numeric
 
    values = ["1,200", "¥3,000", "N/A", " 42 ", 7]
-   cleaned = [parse_number(v) for v in values]
+   cleaned = [clean_numeric(v, relaxed=True) for v in values]
 
    print(cleaned)
 
@@ -62,7 +61,7 @@ Expected result:
 
 .. code-block:: python
 
-   [1200, 3000, None, 42, 7]
+   [1200.0, "¥3,000", "N/A", 42.0, 7.0]
 
 ---
 
@@ -86,6 +85,7 @@ Some tool pages describe behavior that is also useful from Python.
 Examples:
 
 - :doc:`tools/clean-numeric`
+- :doc:`tools/dense-csv`
 - :doc:`tools/find-matches`
 
 The tool pages explain user-facing behavior, while the API reference documents

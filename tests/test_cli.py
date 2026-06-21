@@ -197,3 +197,57 @@ def test_cli_parses_strict_concat_command():
     assert args.command == "strict-concat"
     assert args.input_dir == "input_dir"
     assert args.output == "output.csv"
+
+
+def test_cli_parses_concentrate_command():
+    parser = build_parser()
+    args = parser.parse_args(
+        [
+            "concentrate",
+            "input.csv",
+            "-o",
+            "dense.csv",
+            "-m",
+            "dense-map.json",
+            "--columns",
+            "description,notes",
+            "--min-occurrences",
+            "3",
+        ]
+    )
+
+    assert args.command == "concentrate"
+    assert args.input == "input.csv"
+    assert args.output == "dense.csv"
+    assert args.map == "dense-map.json"
+    assert args.columns == "description,notes"
+    assert args.min_occurrences == 3
+
+
+def test_cli_parses_concentrate_command_with_default_output_paths():
+    parser = build_parser()
+    args = parser.parse_args(["concentrate", "input.csv"])
+
+    assert args.command == "concentrate"
+    assert args.input == "input.csv"
+    assert args.output is None
+    assert args.map is None
+
+
+def test_cli_parses_rehydrate_command():
+    parser = build_parser()
+    args = parser.parse_args(
+        [
+            "rehydrate",
+            "dense.csv",
+            "-m",
+            "dense-map.json",
+            "-o",
+            "restored.csv",
+        ]
+    )
+
+    assert args.command == "rehydrate"
+    assert args.input == "dense.csv"
+    assert args.map == "dense-map.json"
+    assert args.output == "restored.csv"

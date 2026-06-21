@@ -51,3 +51,8 @@ csvsmith = "csvsmith.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.semantic_release]
+allow_zero_version = true
+tag_format = "v{version}"
+version_toml = ["pyproject.toml:project.version"]
