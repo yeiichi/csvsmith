@@ -56,3 +56,6 @@ where = ["src"]
 allow_zero_version = true
 tag_format = "v{version}"
 version_toml = ["pyproject.toml:project.version"]
+
+[tool.semantic_release.changelog.default_templates]
+changelog_file = "CHANGELOG.rst"

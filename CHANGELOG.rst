@@ -1,3 +1,33 @@
+..
+    version list
+
+v0.9.0
+======
+
+Released: 2026-06-21
+
+CSVSmith v0.9.0 adds the dense CSV concentration and rehydration workflow for
+deduplicating repeated values before downstream processing.
+
+Added
+-----
+
+- Added the ``concentrate_csv`` and ``rehydrate_csv`` Python APIs.
+- Added the ``concentrate`` and ``rehydrate`` CLI subcommands.
+- Added versioned map metadata, safe token prefixes, path-collision checks,
+  and atomic output writes.
+- Added default output paths for the concentrated CSV and JSON map.
+- Added reporting for potential repeated-operation reduction among mapped
+  values.
+
+Changed
+-------
+
+- Expanded the README, Quickstart, CLI reference, recipes, and tool
+  documentation around the main csvsmith workflows.
+- Added Python Semantic Release configuration with support for ``0.x``
+  versions.
+
 v0.8.0
 ======
 
