@@ -39,6 +39,7 @@ Features
 - Deduplicate row data and generate reports
 - Classify CSV files into folders based on headers/signatures
 - Convert Excel workbooks to CSV
+- Generate sample CSV files for testing and examples
 - Move files by suffix
 - Find matching values inside CSV files
 - Concatenate CSV files with identical headers
@@ -125,6 +126,12 @@ Convert Excel to CSV:
 .. code-block:: console
 
    csvsmith excel-to-csv input.xlsx
+
+Generate a sample CSV:
+
+.. code-block:: console
+
+   csvsmith sample-csv -o sample.csv --rows 16 --seed 42
 
 Move files by suffix:
 

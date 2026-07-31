@@ -26,6 +26,7 @@ Data transformation
 - ``drop-rows`` — Filter rows based on conditions
 - ``concentrate`` — Replace repeated values with deterministic tokens
 - ``rehydrate`` — Restore tokenized values using a dense CSV map
+- ``sample-csv`` — Generate a sample CSV file for tests and examples
 
 File operations
 ^^^^^^^^^^^^^^^
@@ -78,6 +79,12 @@ Concentrate and restore repeated CSV values:
 
    csvsmith concentrate input.csv
    csvsmith rehydrate input.dense.csv -m input.dense-map.json -o restored.csv
+
+Generate a sample CSV:
+
+.. code-block:: bash
+
+   csvsmith sample-csv -o sample.csv --rows 16 --seed 42
 
 .. note::
    When using values starting with ``$`` (e.g., ``"$1234.56"``) in the shell, 

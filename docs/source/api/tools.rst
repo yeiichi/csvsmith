@@ -30,5 +30,8 @@ Submodules
 .. automodule:: csvsmith.tools.row_dedup
    :members:
 
+.. automodule:: csvsmith.tools.sample_csv
+   :members:
+
 .. automodule:: csvsmith.tools.strict_concat
    :members:

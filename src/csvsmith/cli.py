@@ -17,6 +17,12 @@ from .tools.row_dedup import (
     dedupe_with_report,
     find_duplicate_rows,
 )
+from .tools.sample_csv import (
+    DEFAULT_ITEM_CHARSET,
+    DEFAULT_OUTPUT_PATH,
+    DEFAULT_ROW_COUNT,
+    create_sample_csv,
+)
 from .tools.strict_concat import save_csv, strict_concat_rows
 from .tools.find_matches_in_csv import find_matches_in_csv
 from .utils.distance import analyze_pair
@@ -263,6 +269,23 @@ def cmd_rehydrate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_sample_csv(args: argparse.Namespace) -> int:
+    try:
+        result = create_sample_csv(
+            row_count=args.rows,
+            start=args.start,
+            output_path=args.output,
+            item_charset=args.item_charset,
+            seed=args.seed,
+        )
+    except (OSError, ValueError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    print(f"Wrote sample CSV to: {result.output_path} ({result.row_count} rows)")
+    return 0
+
+
 def _add_find_matches_parser(subparsers) -> None:
     parser = subparsers.add_parser("find-matches", help="Find matches in a CSV file.")
     parser.add_argument("input", help="Input CSV file.")
@@ -321,6 +344,41 @@ def _add_rehydrate_parser(subparsers) -> None:
     parser.add_argument("-m", "--map", required=True, help="Dense CSV JSON map file.")
     parser.add_argument("-o", "--output", required=True, help="Output CSV file.")
     parser.set_defaults(func=cmd_rehydrate)
+
+
+def _add_sample_csv_parser(subparsers) -> None:
+    parser = subparsers.add_parser(
+        "sample-csv",
+        help="Create a sample CSV file with dates, categories, values, and amounts.",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        default=DEFAULT_OUTPUT_PATH,
+        help=f"Output CSV file path (default: {DEFAULT_OUTPUT_PATH}).",
+    )
+    parser.add_argument(
+        "--rows",
+        type=int,
+        default=DEFAULT_ROW_COUNT,
+        help=f"Number of data rows to generate (default: {DEFAULT_ROW_COUNT}).",
+    )
+    parser.add_argument(
+        "--start",
+        help="Start date in YYYY-MM-DD format (default: today).",
+    )
+    parser.add_argument(
+        "--item-charset",
+        choices=["ascii", "kanji", "mix"],
+        default=DEFAULT_ITEM_CHARSET,
+        help=f"Character set for item fields (default: {DEFAULT_ITEM_CHARSET}).",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        help="Random seed for reproducible output.",
+    )
+    parser.set_defaults(func=cmd_sample_csv)
 
 
 def _add_row_duplicates_parser(subparsers) -> None:
@@ -453,6 +511,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_strict_concat_parser(subparsers)
     _add_concentrate_parser(subparsers)
     _add_rehydrate_parser(subparsers)
+    _add_sample_csv_parser(subparsers)
     _add_dedupe_parser(subparsers)
     _add_classify_parser(subparsers)
     _add_move_files_parser(subparsers)

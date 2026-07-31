@@ -14,6 +14,7 @@ Example
    csvsmith excel-to-csv input.xlsx -o output.csv
    csvsmith dedupe data.csv -o clean.csv
    csvsmith concentrate input.csv
+   csvsmith sample-csv -o sample.csv --rows 16
    csvsmith clean-currency-numeric '$1,234.56'
 
 Getting started
@@ -41,6 +42,7 @@ Tools
    tools/excel2csv
    tools/find-matches
    tools/move-files
+   tools/sample-csv
    tools/strict-concat
    tools/string-distance
 

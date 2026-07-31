@@ -20,6 +20,7 @@ Public API:
 - save_csv
 - concentrate_csv
 - rehydrate_csv
+- create_sample_csv
 
 Compatibility aliases:
 - CSVCleaner
@@ -54,6 +55,7 @@ from .tools.row_dedup import (
     find_duplicate_rows,
     dedupe_with_report,
 )
+from .tools.sample_csv import SampleCSVResult, create_sample_csv
 from .tools.strict_concat import save_csv, strict_concat_rows
 from .utils.clean_numeric import clean_numeric
 from .utils.distance import StringDistance, Relation, Result, analyze_pair
@@ -86,4 +88,6 @@ __all__ = [
     "RehydrateResult",
     "concentrate_csv",
     "rehydrate_csv",
+    "SampleCSVResult",
+    "create_sample_csv",
 ]
