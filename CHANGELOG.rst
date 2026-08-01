@@ -1,6 +1,43 @@
 ..
     version list
 
+.. _changelog-v0.10.0:
+
+v0.10.0 (2026-08-01)
+====================
+
+Bug Fixes
+---------
+
+* Configure RST changelog generation (`55b84d6`_)
+
+Continuous Integration
+----------------------
+
+* Add PyPI publishing workflows (`ec133d3`_)
+
+* Release with python semantic release (`9e11cfc`_)
+
+Features
+--------
+
+* Add CSV knapsack marker (`ce443ce`_)
+
+* Add sample CSV generator (`4ae1547`_)
+
+Testing
+-------
+
+* Use package import for normalize tests (`94e7a07`_)
+
+.. _4ae1547: https://github.com/yeiichi/csvsmith/commit/4ae1547dade1ea4fe046ba73de9319153fa2ff83
+.. _55b84d6: https://github.com/yeiichi/csvsmith/commit/55b84d65e276ed96d41e52b6289072c35c74fa50
+.. _94e7a07: https://github.com/yeiichi/csvsmith/commit/94e7a0748ed8c343ffb871c964416149ac05f781
+.. _9e11cfc: https://github.com/yeiichi/csvsmith/commit/9e11cfcc9c66221165123b19f285131fd6002b93
+.. _ce443ce: https://github.com/yeiichi/csvsmith/commit/ce443ceaaa6700cad95b71d6768ac141678662ea
+.. _ec133d3: https://github.com/yeiichi/csvsmith/commit/ec133d38a542f219a7fdc0c1829002d14215c019
+
+
 v0.9.0
 ======
 
