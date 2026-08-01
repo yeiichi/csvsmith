@@ -24,6 +24,9 @@ Submodules
 .. automodule:: csvsmith.tools.find_matches_in_csv
    :members:
 
+.. automodule:: csvsmith.tools.knapsack_csv
+   :members:
+
 .. automodule:: csvsmith.tools.move_files
    :members:
 

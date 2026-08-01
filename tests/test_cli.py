@@ -277,3 +277,29 @@ def test_cli_parses_sample_csv_command():
     assert args.start == "2026-01-01"
     assert args.item_charset == "mix"
     assert args.seed == 42
+
+
+def test_cli_parses_knapsack_command():
+    parser = build_parser()
+    args = parser.parse_args(
+        [
+            "knapsack",
+            "sample.csv",
+            "value",
+            "2,036",
+            "-o",
+            "marked.csv",
+            "--mark-column",
+            "selected",
+            "--mark-value",
+            "knapsack",
+        ]
+    )
+
+    assert args.command == "knapsack"
+    assert args.input == "sample.csv"
+    assert args.target_column == "value"
+    assert args.capacity == "2,036"
+    assert args.output == "marked.csv"
+    assert args.mark_column == "selected"
+    assert args.mark_value == "knapsack"

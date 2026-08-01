@@ -21,6 +21,8 @@ Public API:
 - concentrate_csv
 - rehydrate_csv
 - create_sample_csv
+- find_knapsack_indices
+- mark_knapsack_csv
 
 Compatibility aliases:
 - CSVCleaner
@@ -49,6 +51,11 @@ from .tools.dense_csv import (
 from .tools.excel2csv import excel_to_csv
 from .tools.filter_rows import DropRowsBySubstring
 from .tools.find_matches_in_csv import find_matches_in_csv
+from .tools.knapsack_csv import (
+    KnapsackCSVResult,
+    find_knapsack_indices,
+    mark_knapsack_csv,
+)
 from .tools.move_files import move_by_suffix
 from .tools.row_dedup import (
     add_row_digest,
@@ -90,4 +97,7 @@ __all__ = [
     "rehydrate_csv",
     "SampleCSVResult",
     "create_sample_csv",
+    "KnapsackCSVResult",
+    "find_knapsack_indices",
+    "mark_knapsack_csv",
 ]

@@ -25,6 +25,7 @@ from .tools.sample_csv import (
 )
 from .tools.strict_concat import save_csv, strict_concat_rows
 from .tools.find_matches_in_csv import find_matches_in_csv
+from .tools.knapsack_csv import mark_knapsack_csv
 from .utils.distance import analyze_pair
 from .utils.io import read_csv_rows, write_csv_rows
 
@@ -286,6 +287,27 @@ def cmd_sample_csv(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_knapsack(args: argparse.Namespace) -> int:
+    try:
+        result = mark_knapsack_csv(
+            args.input,
+            args.target_column,
+            args.capacity,
+            args.output,
+            mark_column=args.mark_column,
+            mark_value=args.mark_value,
+        )
+    except (OSError, ValueError, csv.Error) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    print(
+        f"Wrote knapsack CSV to: {result.output_path} "
+        f"({len(result.selected_indices)} rows, best sum {result.best_sum})"
+    )
+    return 0
+
+
 def _add_find_matches_parser(subparsers) -> None:
     parser = subparsers.add_parser("find-matches", help="Find matches in a CSV file.")
     parser.add_argument("input", help="Input CSV file.")
@@ -379,6 +401,31 @@ def _add_sample_csv_parser(subparsers) -> None:
         help="Random seed for reproducible output.",
     )
     parser.set_defaults(func=cmd_sample_csv)
+
+
+def _add_knapsack_parser(subparsers) -> None:
+    parser = subparsers.add_parser(
+        "knapsack",
+        help="Mark CSV rows whose target values maximize a sum within a capacity.",
+    )
+    parser.add_argument("input", help="Input CSV file.")
+    parser.add_argument("target_column", help="Numeric column to optimize.")
+    parser.add_argument("capacity", help="Maximum allowed sum for selected values.")
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="Output CSV file (default: <input-stem>.knapsack.csv).",
+    )
+    parser.add_argument(
+        "--mark-column",
+        help="Name of the added marker column (default: <target-column>_knapsack).",
+    )
+    parser.add_argument(
+        "--mark-value",
+        default="yes",
+        help="Value written for selected rows (default: yes).",
+    )
+    parser.set_defaults(func=cmd_knapsack)
 
 
 def _add_row_duplicates_parser(subparsers) -> None:
@@ -512,6 +559,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_concentrate_parser(subparsers)
     _add_rehydrate_parser(subparsers)
     _add_sample_csv_parser(subparsers)
+    _add_knapsack_parser(subparsers)
     _add_dedupe_parser(subparsers)
     _add_classify_parser(subparsers)
     _add_move_files_parser(subparsers)

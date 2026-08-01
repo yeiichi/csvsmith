@@ -40,6 +40,7 @@ Features
 - Classify CSV files into folders based on headers/signatures
 - Convert Excel workbooks to CSV
 - Generate sample CSV files for testing and examples
+- Mark rows selected by a knapsack-style capacity fit
 - Move files by suffix
 - Find matching values inside CSV files
 - Concatenate CSV files with identical headers
@@ -132,6 +133,12 @@ Generate a sample CSV:
 .. code-block:: console
 
    csvsmith sample-csv -o sample.csv --rows 16 --seed 42
+
+Mark rows whose values best fit a capacity:
+
+.. code-block:: console
+
+   csvsmith knapsack sample.csv value 2036 -o marked.csv
 
 Move files by suffix:
 
