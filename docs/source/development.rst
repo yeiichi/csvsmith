@@ -21,6 +21,32 @@ To build the documentation locally, you need Sphinx installed.
 
 The generated HTML files will be in `docs/build/html`.
 
+Release publishing
+------------------
+
+PyPI publishing is handled by GitHub Actions when a version tag is pushed.
+The workflow uses PyPI Trusted Publishing, so no long-lived PyPI API token is
+stored in GitHub.
+
+Before the first automated publish, configure a Trusted Publisher for the
+``csvsmith`` project on PyPI with these values:
+
+- Owner: ``yeiichi``
+- Repository name: ``csvsmith``
+- Workflow name: ``pypi.yml``
+- Environment name: ``pypi``
+
+To publish a release, make sure ``pyproject.toml`` contains the intended
+version, then create and push the matching tag:
+
+.. code-block:: bash
+
+   git tag v0.10.0
+   git push origin v0.10.0
+
+The PyPI workflow builds the source distribution and wheel, checks them with
+Twine, and publishes them to PyPI.
+
 Contributing
 ------------
 

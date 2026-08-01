@@ -1,6 +1,6 @@
 # File: tests/test_normalize.py
 
-from src.csvsmith.utils.normalize import normalize
+from csvsmith.utils.normalize import normalize
 
 
 def test_normalize_with_spaces():
