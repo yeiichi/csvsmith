@@ -1,46 +1,51 @@
-name: Publish to PyPI
+name: Release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  build:
-    name: Build distributions
+  release:
+    name: Python Semantic Release
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref_name }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-          cache: pip
+          fetch-depth: 0
 
-      - name: Build and check distributions
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install build twine
-          python -m build
-          python -m twine check dist/*
+      - name: Run Python Semantic Release
+        id: release
+        uses: python-semantic-release/python-semantic-release@v10.5.3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload distributions
+        if: steps.release.outputs.released == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: python-package-distributions
           path: dist/
           if-no-files-found: error
+    outputs:
+      released: ${{ steps.release.outputs.released }}
 
   publish:
-    name: Publish distributions
+    name: Publish to PyPI
     needs:
-      - build
+      - release
+    if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-latest
     environment:
       name: pypi

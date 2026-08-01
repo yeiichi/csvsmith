@@ -24,9 +24,14 @@ The generated HTML files will be in `docs/build/html`.
 Release publishing
 ------------------
 
-PyPI publishing is handled by GitHub Actions when a version tag is pushed.
-The workflow uses PyPI Trusted Publishing, so no long-lived PyPI API token is
-stored in GitHub.
+Release versioning and tagging are handled by Python Semantic Release in
+GitHub Actions. When commits land on ``main``, Semantic Release evaluates the
+commit history, updates ``pyproject.toml`` and ``CHANGELOG.rst`` when a new
+version is due, creates the version tag and GitHub release, and builds the
+package distributions.
+
+PyPI publishing then uses PyPI Trusted Publishing, so no long-lived PyPI API
+token is stored in GitHub.
 
 Before the first automated publish, configure a Trusted Publisher for the
 ``csvsmith`` project on PyPI with these values:
@@ -36,16 +41,16 @@ Before the first automated publish, configure a Trusted Publisher for the
 - Workflow name: ``pypi.yml``
 - Environment name: ``pypi``
 
-To publish a release, make sure ``pyproject.toml`` contains the intended
-version, then create and push the matching tag:
+To publish a release, merge commits using Conventional Commit messages such as
+``feat: ...`` or ``fix: ...``. The release workflow runs after the merge to
+``main``:
 
-.. code-block:: bash
+- ``feat`` creates a minor release.
+- ``fix`` creates a patch release.
+- breaking changes create a major release.
 
-   git tag v0.10.0
-   git push origin v0.10.0
-
-The PyPI workflow builds the source distribution and wheel, checks them with
-Twine, and publishes them to PyPI.
+If no release-worthy commits are present, the workflow exits without creating
+a release or publishing to PyPI.
 
 Contributing
 ------------
