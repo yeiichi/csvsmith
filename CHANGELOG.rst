@@ -1,6 +1,19 @@
 ..
     version list
 
+.. _changelog-v0.13.0:
+
+v0.13.0 (2026-08-02)
+====================
+
+Features
+--------
+
+* Add DataFrame.to_csv file output (`d308f42`_)
+
+.. _d308f42: https://github.com/yeiichi/csvsmith/commit/d308f423a3cc44107f8bca3a042b551f8dbe6692
+
+
 .. _changelog-v0.12.0:
 
 v0.12.0 (2026-08-02)
