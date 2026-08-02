@@ -1,6 +1,19 @@
 ..
     version list
 
+.. _changelog-v0.11.0:
+
+v0.11.0 (2026-08-02)
+====================
+
+Features
+--------
+
+* Add csv viewer command (`6042424`_)
+
+.. _6042424: https://github.com/yeiichi/csvsmith/commit/604242454d41d4033bbbd71afe83c71f167ca4d9
+
+
 .. _changelog-v0.10.0:
 
 v0.10.0 (2026-08-01)
