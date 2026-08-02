@@ -15,6 +15,7 @@ Example
    csvsmith dedupe data.csv -o clean.csv
    csvsmith concentrate input.csv
    csvsmith sample-csv -o sample.csv --rows 16
+   csvsmith view sample.csv --head 5
    csvsmith knapsack sample.csv value 2036 -o marked.csv
    csvsmith clean-currency-numeric '$1,234.56'
 
@@ -45,6 +46,7 @@ Tools
    tools/knapsack
    tools/move-files
    tools/sample-csv
+   tools/view
    tools/strict-concat
    tools/string-distance
 

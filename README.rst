@@ -23,6 +23,7 @@ Small, focused CSV utilities for common data wrangling tasks.
 files, including cleaning numeric values, filtering rows, deduplicating
 records, classifying files, converting Excel spreadsheets to CSV, moving
 files by suffix, and finding matches inside CSV content.
+It also includes a lightweight CSV viewer for quick terminal inspection.
 
 Documentation
 -------------
@@ -40,6 +41,7 @@ Features
 - Classify CSV files into folders based on headers/signatures
 - Convert Excel workbooks to CSV
 - Generate sample CSV files for testing and examples
+- View selected CSV rows and columns as a text table
 - Mark rows selected by a knapsack-style capacity fit
 - Move files by suffix
 - Find matching values inside CSV files
@@ -133,6 +135,12 @@ Generate a sample CSV:
 .. code-block:: console
 
    csvsmith sample-csv -o sample.csv --rows 16 --seed 42
+
+View a CSV file:
+
+.. code-block:: console
+
+   csvsmith view sample.csv --columns date,value --filter value ">" 700 --head 5
 
 Mark rows whose values best fit a capacity:
 

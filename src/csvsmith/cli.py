@@ -8,6 +8,7 @@ from typing import Optional, Sequence
 
 from . import __version__
 from .tools.classify import CSVClassifier
+from .tools.csv_viewer import DataFrame, build_filter
 from .tools.dense_csv import concentrate_csv, rehydrate_csv
 from .tools.excel2csv import excel_to_csv
 from .utils.clean_numeric import clean_currency_numeric, clean_numeric
@@ -28,6 +29,20 @@ from .tools.find_matches_in_csv import find_matches_in_csv
 from .tools.knapsack_csv import mark_knapsack_csv
 from .utils.distance import analyze_pair
 from .utils.io import read_csv_rows, write_csv_rows
+
+
+def _non_negative_int(value: str) -> int:
+    number = int(value)
+    if number < 0:
+        raise argparse.ArgumentTypeError("must be 0 or greater")
+    return number
+
+
+def _positive_int(value: str) -> int:
+    number = int(value)
+    if number < 1:
+        raise argparse.ArgumentTypeError("must be 1 or greater")
+    return number
 
 
 def cmd_row_duplicates(args: argparse.Namespace) -> int:
@@ -287,6 +302,61 @@ def cmd_sample_csv(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_view(args: argparse.Namespace) -> int:
+    try:
+        df = DataFrame.from_csv(
+            args.input,
+            convert_types=not args.no_convert_types,
+        )
+
+        if args.filter:
+            column, op, value = args.filter
+            df = df.filter(build_filter(column, op, value))
+
+        if args.columns:
+            columns = [column.strip() for column in args.columns.split(",") if column.strip()]
+            df = df.select(columns)
+
+        if args.head is not None:
+            output = df.head(args.head)
+            if output:
+                print(output)
+        elif sys.stdin.isatty() and sys.stdout.isatty():
+            _paginate_dataframe(df, args.page_size)
+        else:
+            output = df.render()
+            if output:
+                print(output)
+    except (OSError, csv.Error) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+    except KeyError as e:
+        print(f"Error: unknown column: {e.args[0]}", file=sys.stderr)
+        return 1
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    return 0
+
+
+def _paginate_dataframe(df: DataFrame, page_size: int) -> None:
+    for start in range(0, len(df), page_size):
+        end = min(start + page_size, len(df))
+        output = df.render(start=start, end=end)
+        if output:
+            print(output)
+
+        if end >= len(df):
+            break
+
+        print(f"\nRows {start + 1}-{end} of {len(df)}")
+        response = input("Press Enter for next page, or q to quit: ").strip().lower()
+        if response == "q":
+            break
+        print()
+
+
 def cmd_knapsack(args: argparse.Namespace) -> int:
     try:
         result = mark_knapsack_csv(
@@ -401,6 +471,45 @@ def _add_sample_csv_parser(subparsers) -> None:
         help="Random seed for reproducible output.",
     )
     parser.set_defaults(func=cmd_sample_csv)
+
+
+def _add_view_parser(subparsers) -> None:
+    parser = subparsers.add_parser(
+        "view",
+        help="View and lightly query CSV files as a text table.",
+    )
+    parser.add_argument("input", help="Input CSV file.")
+    parser.add_argument(
+        "-n",
+        "--head",
+        type=_non_negative_int,
+        help="Print only the first N rows.",
+    )
+    parser.add_argument(
+        "-p",
+        "--page-size",
+        type=_positive_int,
+        default=20,
+        help="Number of rows per interactive page (default: 20).",
+    )
+    parser.add_argument(
+        "-c",
+        "--columns",
+        help="Comma-separated columns to display, such as date,amount.",
+    )
+    parser.add_argument(
+        "-f",
+        "--filter",
+        nargs=3,
+        metavar=("COLUMN", "OP", "VALUE"),
+        help="Filter rows with a simple expression, such as: value '>' 700.",
+    )
+    parser.add_argument(
+        "--no-convert-types",
+        action="store_true",
+        help="Keep all CSV values as strings instead of inferring numbers.",
+    )
+    parser.set_defaults(func=cmd_view)
 
 
 def _add_knapsack_parser(subparsers) -> None:
@@ -559,6 +668,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_concentrate_parser(subparsers)
     _add_rehydrate_parser(subparsers)
     _add_sample_csv_parser(subparsers)
+    _add_view_parser(subparsers)
     _add_knapsack_parser(subparsers)
     _add_dedupe_parser(subparsers)
     _add_classify_parser(subparsers)

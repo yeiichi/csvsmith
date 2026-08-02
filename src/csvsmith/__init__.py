@@ -21,6 +21,9 @@ Public API:
 - concentrate_csv
 - rehydrate_csv
 - create_sample_csv
+- DataFrame
+- build_filter
+- infer_type
 - find_knapsack_indices
 - mark_knapsack_csv
 
@@ -42,6 +45,7 @@ Submodules:
 __version__ = "0.8.0"
 
 from .tools.classify import CSVClassifier
+from .tools.csv_viewer import DataFrame, build_filter, infer_type
 from .tools.dense_csv import (
     ConcentrateResult,
     RehydrateResult,
@@ -97,6 +101,9 @@ __all__ = [
     "rehydrate_csv",
     "SampleCSVResult",
     "create_sample_csv",
+    "DataFrame",
+    "build_filter",
+    "infer_type",
     "KnapsackCSVResult",
     "find_knapsack_indices",
     "mark_knapsack_csv",

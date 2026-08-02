@@ -279,6 +279,35 @@ def test_cli_parses_sample_csv_command():
     assert args.seed == 42
 
 
+def test_cli_parses_view_command():
+    parser = build_parser()
+    args = parser.parse_args(
+        [
+            "view",
+            "sample.csv",
+            "--head",
+            "3",
+            "--page-size",
+            "10",
+            "--columns",
+            "date,value",
+            "--filter",
+            "value",
+            ">",
+            "700",
+            "--no-convert-types",
+        ]
+    )
+
+    assert args.command == "view"
+    assert args.input == "sample.csv"
+    assert args.head == 3
+    assert args.page_size == 10
+    assert args.columns == "date,value"
+    assert args.filter == ["value", ">", "700"]
+    assert args.no_convert_types is True
+
+
 def test_cli_parses_knapsack_command():
     parser = build_parser()
     args = parser.parse_args(

@@ -27,6 +27,7 @@ Data transformation
 - ``concentrate`` — Replace repeated values with deterministic tokens
 - ``rehydrate`` — Restore tokenized values using a dense CSV map
 - ``sample-csv`` — Generate a sample CSV file for tests and examples
+- ``view`` — Print, select, and lightly filter CSV rows as a text table
 - ``knapsack`` — Mark rows whose values best fit a capacity
 
 File operations
@@ -86,6 +87,12 @@ Generate a sample CSV:
 .. code-block:: bash
 
    csvsmith sample-csv -o sample.csv --rows 16 --seed 42
+
+View selected rows and columns:
+
+.. code-block:: bash
+
+   csvsmith view sample.csv --columns date,value --filter value ">" 700 --head 5
 
 Mark rows whose values best fit a capacity:
 
