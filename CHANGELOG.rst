@@ -1,6 +1,25 @@
 ..
     version list
 
+.. _changelog-v0.11.1:
+
+v0.11.1 (2026-08-02)
+====================
+
+Bug Fixes
+---------
+
+* Read viewer CSVs with utf-8-sig (`71d2c28`_)
+
+Continuous Integration
+----------------------
+
+* Use uv for tests and builds (`e7a77cd`_)
+
+.. _71d2c28: https://github.com/yeiichi/csvsmith/commit/71d2c28e3c82227a04c2b5284cc44ed92133a883
+.. _e7a77cd: https://github.com/yeiichi/csvsmith/commit/e7a77cde7367d5bb543cc9cec4ac6d8342c10e7b
+
+
 .. _changelog-v0.11.0:
 
 v0.11.0 (2026-08-02)
