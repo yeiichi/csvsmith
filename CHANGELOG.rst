@@ -1,6 +1,19 @@
 ..
     version list
 
+.. _changelog-v0.12.0:
+
+v0.12.0 (2026-08-02)
+====================
+
+Features
+--------
+
+* Add strip-bom command (`5af9904`_)
+
+.. _5af9904: https://github.com/yeiichi/csvsmith/commit/5af990426e53aa5c2f79fbedc13d441a704f9503
+
+
 .. _changelog-v0.11.1:
 
 v0.11.1 (2026-08-02)
