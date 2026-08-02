@@ -43,7 +43,12 @@ Submodules:
 - csvsmith.cli (CLI entrypoint)
 """
 
-__version__ = "0.8.0"
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("csvsmith")
+except PackageNotFoundError:
+    __version__ = "0.0.0"
 
 from .tools.classify import CSVClassifier
 from .tools.csv_viewer import DataFrame, build_filter, infer_type

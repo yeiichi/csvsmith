@@ -70,6 +70,58 @@ def test_dataframe_filter_supports_numeric_comparisons(tmp_path):
     assert df["name"] == ["Alice"]
 
 
+def test_dataframe_to_csv_returns_csv_string(tmp_path):
+    source = tmp_path / "sample.csv"
+    write_csv(
+        source,
+        [
+            ["name", "score", "note"],
+            ["Alice", "10", "Hello, Tokyo"],
+            ["Bob", "8", "Line\nbreak"],
+        ],
+    )
+
+    df = DataFrame.from_csv(source).filter(build_filter("score", ">", "7"))
+
+    assert (
+        df.to_csv()
+        == 'name,score,note\r\nAlice,10,"Hello, Tokyo"\r\nBob,8,"Line\nbreak"\r\n'
+    )
+
+
+def test_dataframe_to_csv_writes_csv_file(tmp_path):
+    source = tmp_path / "sample.csv"
+    output = tmp_path / "exports" / "filtered.csv"
+    write_csv(
+        source,
+        [
+            ["name", "score", "note"],
+            ["Alice", "10", "Hello, Tokyo"],
+            ["Bob", "8", "Line\nbreak"],
+        ],
+    )
+
+    df = DataFrame.from_csv(source).filter(build_filter("score", ">", "8"))
+
+    result = df.to_csv(output)
+
+    assert result == output
+    assert output.read_text(encoding="utf-8") == "name,score,note\nAlice,10,\"Hello, Tokyo\"\n"
+
+
+def test_dataframe_to_csv_round_trips_with_from_csv(tmp_path):
+    source = tmp_path / "sample.csv"
+    output = tmp_path / "output.csv"
+    write_csv(source, [["id", "name"], ["001", "Alice"], ["002", "Bob"]])
+
+    DataFrame.from_csv(source, convert_types=False).to_csv(output)
+
+    round_tripped = DataFrame.from_csv(output, convert_types=False)
+    assert round_tripped.columns == ["id", "name"]
+    assert round_tripped["id"] == ["001", "002"]
+    assert round_tripped["name"] == ["Alice", "Bob"]
+
+
 def test_view_command_filters_and_selects_columns(tmp_path, capsys):
     source = tmp_path / "sample.csv"
     write_csv(

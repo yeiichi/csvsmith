@@ -42,5 +42,8 @@ Python API
    filtered = df.filter(build_filter("value", ">", "700")).select(["date", "value"])
 
    print(filtered.head(5))
+   filtered.to_csv("filtered.csv")
 
-The API returns formatted tables as strings via ``render`` and ``head``.
+The API returns formatted tables as strings via ``render`` and ``head``. Use
+``to_csv`` without a path to get a CSV string, or pass a path to write the CSV
+file.

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import io
 import operator
 from pathlib import Path
 from typing import Any, Callable, TextIO
@@ -87,6 +88,28 @@ class DataFrame:
     def head(self, n: int = 5) -> str:
         """Return the first ``n`` rows formatted as a text table."""
         return self.render(end=n)
+
+    def to_csv(
+        self,
+        filepath: str | Path | None = None,
+        *,
+        encoding: str = "utf-8",
+    ) -> str | Path:
+        """Return the ``DataFrame`` as CSV, or write it to ``filepath``."""
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(self.columns)
+        for index in range(len(self)):
+            writer.writerow([self._data[column][index] for column in self.columns])
+        csv_text = output.getvalue()
+
+        if filepath is None:
+            return csv_text
+
+        path = Path(filepath)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(csv_text, encoding=encoding, newline="")
+        return path
 
     def select(self, columns: list[str]) -> DataFrame:
         """Return a new ``DataFrame`` with the selected columns."""

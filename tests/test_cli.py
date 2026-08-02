@@ -1,5 +1,13 @@
+from importlib.metadata import version
+
 import pytest
+
+import csvsmith
 from csvsmith.cli import build_parser, main
+
+
+def test_package_version_matches_metadata():
+    assert csvsmith.__version__ == version("csvsmith")
 
 
 def test_main_help():
