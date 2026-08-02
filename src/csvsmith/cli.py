@@ -24,6 +24,7 @@ from .tools.sample_csv import (
     DEFAULT_ROW_COUNT,
     create_sample_csv,
 )
+from .tools.strip_bom import strip_utf8_bom
 from .tools.strict_concat import save_csv, strict_concat_rows
 from .tools.find_matches_in_csv import find_matches_in_csv
 from .tools.knapsack_csv import mark_knapsack_csv
@@ -201,6 +202,18 @@ def cmd_find_matches(args: argparse.Namespace) -> int:
         print("No matches found.")
     else:
         print(json.dumps(results, indent=2))
+    return 0
+
+
+def cmd_strip_bom(args: argparse.Namespace) -> int:
+    try:
+        result = strip_utf8_bom(args.input, args.output, in_place=args.in_place)
+    except (OSError, ValueError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    status = "removed BOM" if result.removed else "no BOM found"
+    print(f"Wrote CSV to: {result.output_path} ({status})")
     return 0
 
 
@@ -386,6 +399,25 @@ def _add_find_matches_parser(subparsers) -> None:
     parser.add_argument("--ignore-whitespace", action="store_true", help="Ignore whitespace.")
     parser.add_argument("--no-nfkc", action="store_true", help="Disable NFKC normalization.")
     parser.set_defaults(func=cmd_find_matches)
+
+
+def _add_strip_bom_parser(subparsers) -> None:
+    parser = subparsers.add_parser(
+        "strip-bom",
+        help="Remove a leading UTF-8 BOM from a CSV file.",
+    )
+    parser.add_argument("input", help="Input CSV file.")
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="Output CSV file (default: <input-stem>.no-bom.csv).",
+    )
+    parser.add_argument(
+        "--in-place",
+        action="store_true",
+        help="Rewrite the input file instead of writing a separate output file.",
+    )
+    parser.set_defaults(func=cmd_strip_bom)
 
 
 def _add_strict_concat_parser(subparsers) -> None:
@@ -664,6 +696,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     _add_row_duplicates_parser(subparsers)
     _add_find_matches_parser(subparsers)
+    _add_strip_bom_parser(subparsers)
     _add_strict_concat_parser(subparsers)
     _add_concentrate_parser(subparsers)
     _add_rehydrate_parser(subparsers)

@@ -190,6 +190,26 @@ def test_cli_parses_find_matches_command():
     assert args.no_nfkc is True
 
 
+def test_cli_parses_strip_bom_command():
+    parser = build_parser()
+    args = parser.parse_args(["strip-bom", "input.csv", "-o", "output.csv"])
+
+    assert args.command == "strip-bom"
+    assert args.input == "input.csv"
+    assert args.output == "output.csv"
+    assert args.in_place is False
+
+
+def test_cli_parses_strip_bom_command_in_place():
+    parser = build_parser()
+    args = parser.parse_args(["strip-bom", "input.csv", "--in-place"])
+
+    assert args.command == "strip-bom"
+    assert args.input == "input.csv"
+    assert args.output is None
+    assert args.in_place is True
+
+
 def test_cli_parses_strict_concat_command():
     parser = build_parser()
     args = parser.parse_args(["strict-concat", "input_dir", "-o", "output.csv"])

@@ -21,6 +21,7 @@ Public API:
 - concentrate_csv
 - rehydrate_csv
 - create_sample_csv
+- strip_utf8_bom
 - DataFrame
 - build_filter
 - infer_type
@@ -67,6 +68,7 @@ from .tools.row_dedup import (
     dedupe_with_report,
 )
 from .tools.sample_csv import SampleCSVResult, create_sample_csv
+from .tools.strip_bom import StripBomResult, strip_utf8_bom
 from .tools.strict_concat import save_csv, strict_concat_rows
 from .utils.clean_numeric import clean_numeric
 from .utils.distance import StringDistance, Relation, Result, analyze_pair
@@ -101,6 +103,8 @@ __all__ = [
     "rehydrate_csv",
     "SampleCSVResult",
     "create_sample_csv",
+    "StripBomResult",
+    "strip_utf8_bom",
     "DataFrame",
     "build_filter",
     "infer_type",
