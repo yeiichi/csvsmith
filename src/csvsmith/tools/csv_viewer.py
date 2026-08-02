@@ -31,7 +31,7 @@ class DataFrame:
         convert_types: bool = True,
     ) -> DataFrame:
         """Read a CSV file into a column-oriented ``DataFrame``."""
-        with Path(filepath).open("r", newline="", encoding="utf-8") as file:
+        with Path(filepath).open("r", newline="", encoding="utf-8-sig") as file:
             reader = csv.DictReader(file)
             fieldnames = reader.fieldnames or []
             data: dict[str, list[Any]] = {column: [] for column in fieldnames}

@@ -24,6 +24,17 @@ def test_dataframe_reads_csv_and_infers_numeric_types(tmp_path):
     assert repr(df) == "<DataFrame with 2 rows and 2 columns>"
 
 
+def test_dataframe_reads_utf8_bom_csv_headers(tmp_path):
+    source = tmp_path / "sample.csv"
+    with source.open("w", encoding="utf-8-sig", newline="") as outfile:
+        csv.writer(outfile).writerows([["name", "value"], ["Alice", "12"]])
+
+    df = DataFrame.from_csv(source)
+
+    assert df.columns == ["name", "value"]
+    assert df["name"] == ["Alice"]
+
+
 def test_dataframe_can_keep_values_as_strings(tmp_path):
     source = tmp_path / "sample.csv"
     write_csv(source, [["id"], ["001"]])
